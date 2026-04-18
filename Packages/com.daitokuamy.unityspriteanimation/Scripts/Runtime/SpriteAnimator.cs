@@ -389,5 +389,34 @@ namespace UnitySpriteAnimation {
 
             return Mathf.Clamp(time, 0.0f, clip.Duration);
         }
+
+        /// <summary>
+        /// FlipBookBlend 用の Material property を更新する
+        /// </summary>
+        /// <param name="material">更新対象 Material</param>
+        /// <param name="currentSprite">現在表示する Sprite</param>
+        /// <param name="previousSprite">遷移元 Sprite</param>
+        /// <param name="fadeProgress">0.0-1.0 の補間率</param>
+        protected void ApplyFlipBookBlendMaterialProperties(Material material, Sprite currentSprite, Sprite previousSprite, float fadeProgress) {
+            MaterialUtility.ApplyProperties(material, currentSprite, previousSprite, fadeProgress);
+        }
+
+        /// <summary>
+        /// FlipBookBlend 用の Material property を通常表示状態へ戻す
+        /// </summary>
+        /// <param name="material">更新対象 Material</param>
+        /// <param name="currentSprite">現在表示する Sprite</param>
+        protected void ResetFlipBookBlendMaterialProperties(Material material, Sprite currentSprite) {
+            MaterialUtility.ResetProperties(material, currentSprite);
+        }
+
+        /// <summary>
+        /// FlipBookBlend 用 property を持つ Material か判定する
+        /// </summary>
+        /// <param name="material">判定対象 Material</param>
+        /// <returns>対応している場合 true</returns>
+        protected bool SupportsFlipBookBlendMaterial(Material material) {
+            return MaterialUtility.SupportsMaterial(material);
+        }
     }
 }

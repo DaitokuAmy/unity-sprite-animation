@@ -1,12 +1,18 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace UnitySpriteAnimation.Editor {
     /// <summary>
     /// SpriteAnimationClipEditorWindow のプレビュー関連処理
     /// </summary>
     public sealed partial class SpriteAnimationClipEditorWindow {
+        private const string PreviewShaderName = "Unity Sprite Animation/UI Default";
+        private const int PreviewShaderPassIndex = 0;
+
+        private Material _previewMaterial;
+
         /// <summary>
         /// プレビュー用アイコン種別
         /// </summary>
@@ -238,21 +244,16 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             var currentSprite = _clip.GetSprite(_previewTime);
-            if (!TryGetPreviewFlipBookBlend(out var previousSprite, out var fadeProgress)) {
-                if (currentSprite != null) {
-                    DrawSpritePreview(rect, currentSprite, _previewScale);
-                }
-
+            if (currentSprite == null) {
                 return;
             }
 
-            if (previousSprite != null) {
-                DrawSpritePreview(rect, previousSprite, _previewScale, 1.0f - fadeProgress);
+            if (TryGetPreviewFlipBookBlend(out var previousSprite, out var fadeProgress) && EnsurePreviewMaterial()) {
+                DrawPreviewSpriteWithMaterial(rect, currentSprite, previousSprite, fadeProgress);
+                return;
             }
 
-            if (currentSprite != null) {
-                DrawSpritePreview(rect, currentSprite, _previewScale, fadeProgress);
-            }
+            DrawSpritePreview(rect, currentSprite, _previewScale);
         }
 
         /// <summary>
@@ -331,6 +332,89 @@ namespace UnitySpriteAnimation.Editor {
             GUI.color = color;
             GUI.DrawTextureWithTexCoords(GetFitRect(rect, spriteRect.size, scaleMultiplier), texture, uv, true);
             GUI.color = previousColor;
+        }
+
+        /// <summary>
+        /// Material を使って Sprite プレビューを描画する
+        /// </summary>
+        /// <param name="rect">描画先</param>
+        /// <param name="currentSprite">現在 Sprite</param>
+        /// <param name="previousSprite">遷移元 Sprite</param>
+        /// <param name="fadeProgress">補間率</param>
+        private void DrawPreviewSpriteWithMaterial(Rect rect, Sprite currentSprite, Sprite previousSprite, float fadeProgress) {
+            if (_previewMaterial == null || currentSprite == null || currentSprite.texture == null || Event.current.type != EventType.Repaint) {
+                return;
+            }
+
+            _previewMaterial.SetColor("_Color", Color.white);
+            _previewMaterial.SetTexture("_MainTex", currentSprite.texture);
+            MaterialUtility.ApplyProperties(_previewMaterial, currentSprite, previousSprite, fadeProgress);
+
+            var uvRect = MaterialUtility.GetSpriteUVRect(currentSprite);
+            var sourceRect = new Rect(uvRect.x, uvRect.y, uvRect.z, uvRect.w);
+            var drawRect = GetFitRect(rect, currentSprite.rect.size, _previewScale);
+            Graphics.DrawTexture(drawRect, currentSprite.texture, sourceRect, 0, 0, 0, 0, Color.white, _previewMaterial, PreviewShaderPassIndex);
+        }
+
+        /// <summary>
+        /// プレビュー用 Material を確保する
+        /// </summary>
+        /// <returns>確保できた場合 true</returns>
+        private bool EnsurePreviewMaterial() {
+            if (_previewMaterial != null) {
+                return MaterialUtility.SupportsMaterial(_previewMaterial);
+            }
+
+            var shader = Shader.Find(PreviewShaderName);
+            if (shader == null) {
+                return false;
+            }
+
+            _previewMaterial = new Material(shader) {
+                hideFlags = HideFlags.HideAndDontSave,
+            };
+            ConfigurePreviewMaterial(_previewMaterial);
+            return MaterialUtility.SupportsMaterial(_previewMaterial);
+        }
+
+        /// <summary>
+        /// プレビュー用 Material を解放する
+        /// </summary>
+        private void ReleasePreviewMaterial() {
+            if (_previewMaterial == null) {
+                return;
+            }
+
+            DestroyImmediate(_previewMaterial);
+            _previewMaterial = null;
+        }
+
+        /// <summary>
+        /// プレビュー描画用の Material 設定を適用する
+        /// </summary>
+        /// <param name="material">設定対象 Material</param>
+        private static void ConfigurePreviewMaterial(Material material) {
+            if (material == null) {
+                return;
+            }
+
+            material.SetColor("_Color", Color.white);
+            material.SetFloat("_Blend", 0.0f);
+            material.SetFloat("_BlendOp", (float)BlendOp.Add);
+            material.SetOverrideTag("RenderType", "Transparent");
+            material.SetFloat("_ColorMask", 15.0f);
+            material.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
+            material.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_SrcBlendAlpha", (float)BlendMode.One);
+            material.SetFloat("_DstBlendAlpha", (float)BlendMode.OneMinusSrcAlpha);
+            material.SetVector("_TextureSampleAdd", Vector4.zero);
+            material.SetVector("_ClipRect", new Vector4(-32767.0f, -32767.0f, 32767.0f, 32767.0f));
+            material.SetFloat("_UIMaskSoftnessX", 0.0f);
+            material.SetFloat("_UIMaskSoftnessY", 0.0f);
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.DisableKeyword("_ALPHAMODULATE_ON");
+            material.DisableKeyword("UNITY_UI_CLIP_RECT");
+            material.renderQueue = (int)RenderQueue.Transparent;
         }
 
         /// <summary>

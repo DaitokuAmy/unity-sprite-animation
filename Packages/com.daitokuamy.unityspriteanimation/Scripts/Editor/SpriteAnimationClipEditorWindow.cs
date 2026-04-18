@@ -127,6 +127,7 @@ namespace UnitySpriteAnimation.Editor {
         private void OnDisable() {
             EditorApplication.update -= OnEditorUpdate;
             Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+            ReleasePreviewMaterial();
         }
 
         /// <summary>
