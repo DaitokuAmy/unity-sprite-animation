@@ -75,7 +75,6 @@ namespace UnitySpriteAnimation.Editor {
         private float _previewTime;
         private double _previewStartTime;
         private float _previewScale = 1.0f;
-        private bool _hasRegisteredRootCallbacks;
 
         /// <summary>
         /// Window を開く
@@ -122,6 +121,13 @@ namespace UnitySpriteAnimation.Editor {
         }
 
         /// <summary>
+        /// フォーカス取得時処理
+        /// </summary>
+        private void OnFocus() {
+            FocusRootElement();
+        }
+
+        /// <summary>
         /// 無効化時処理
         /// </summary>
         private void OnDisable() {
@@ -149,22 +155,40 @@ namespace UnitySpriteAnimation.Editor {
             BuildTimelineArea(rootVisualElement);
 
             SetClip(_clip);
+            FocusRootElement();
         }
 
         /// <summary>
         /// ルート要素のコールバックを登録する
         /// </summary>
         private void RegisterRootCallbacks() {
-            if (_hasRegisteredRootCallbacks) {
-                return;
-            }
-
+            rootVisualElement.UnregisterCallback<KeyDownEvent>(OnRootKeyDown);
+            rootVisualElement.UnregisterCallback<ValidateCommandEvent>(OnValidateCommand);
+            rootVisualElement.UnregisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
+            rootVisualElement.UnregisterCallback<MouseMoveEvent>(OnRootMouseMove);
+            rootVisualElement.UnregisterCallback<MouseUpEvent>(OnRootMouseUp);
             rootVisualElement.RegisterCallback<KeyDownEvent>(OnRootKeyDown);
             rootVisualElement.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             rootVisualElement.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             rootVisualElement.RegisterCallback<MouseMoveEvent>(OnRootMouseMove);
             rootVisualElement.RegisterCallback<MouseUpEvent>(OnRootMouseUp);
-            _hasRegisteredRootCallbacks = true;
+        }
+
+        /// <summary>
+        /// ルート要素へフォーカスを戻す
+        /// </summary>
+        private void FocusRootElement() {
+            if (rootVisualElement.panel == null) {
+                return;
+            }
+
+            rootVisualElement.schedule.Execute(() => {
+                if (rootVisualElement.panel == null) {
+                    return;
+                }
+
+                rootVisualElement.Focus();
+            });
         }
 
         /// <summary>

@@ -10,6 +10,8 @@ namespace UnitySpriteAnimation {
         private SpriteRenderer _spriteRenderer;
 
         private Color _spriteRendererBaseColor = Color.white;
+        private MaterialPropertyBlock _materialPropertyBlock;
+        private Material _sourceMaterial;
         private Material _runtimeMaterial;
 
         /// <inheritdoc />
@@ -20,23 +22,46 @@ namespace UnitySpriteAnimation {
             EnsureComponents();
             ApplySpriteRendererState(_spriteRenderer, sprite, 1.0f, _spriteRendererBaseColor);
 
-            var material = GetRuntimeMaterial();
-            if (SupportsFlipBookBlendMaterial(material)) {
-                ResetFlipBookBlendMaterialProperties(material, sprite);
+            if (Application.isPlaying) {
+                var runtimeMaterial = GetRuntimeMaterial();
+                if (SupportsFlipBookBlendMaterial(runtimeMaterial)) {
+                    ResetFlipBookBlendMaterialProperties(runtimeMaterial, sprite);
+                }
+                return;
+            }
+
+            var sourceMaterial = GetSourceMaterial();
+            if (SupportsFlipBookBlendMaterial(sourceMaterial)) {
+                ResetFlipBookBlendPropertyBlock(sprite);
+            }
+            else {
+                ClearPropertyBlock();
             }
         }
 
         /// <inheritdoc />
         protected override void ApplyFlipBookBlend(Sprite fromSprite, Sprite toSprite, float fadeProgress) {
             EnsureComponents();
-            var material = GetRuntimeMaterial();
-            if (!SupportsFlipBookBlendMaterial(material)) {
+            if (Application.isPlaying) {
+                var runtimeMaterial = GetRuntimeMaterial();
+                if (!SupportsFlipBookBlendMaterial(runtimeMaterial)) {
+                    ApplySingleSprite(toSprite);
+                    return;
+                }
+
+                ApplySpriteRendererState(_spriteRenderer, toSprite, 1.0f, _spriteRendererBaseColor);
+                ApplyFlipBookBlendMaterialProperties(runtimeMaterial, toSprite, fromSprite, fadeProgress);
+                return;
+            }
+
+            var sourceMaterial = GetSourceMaterial();
+            if (!SupportsFlipBookBlendMaterial(sourceMaterial)) {
                 ApplySingleSprite(toSprite);
                 return;
             }
 
             ApplySpriteRendererState(_spriteRenderer, toSprite, 1.0f, _spriteRendererBaseColor);
-            ApplyFlipBookBlendMaterialProperties(material, toSprite, fromSprite, fadeProgress);
+            ApplyFlipBookBlendPropertyBlock(toSprite, fromSprite, fadeProgress);
         }
 
         /// <inheritdoc />
@@ -49,16 +74,7 @@ namespace UnitySpriteAnimation {
         /// 破棄時に生成済み Material を解放する
         /// </summary>
         private void OnDestroy() {
-            if (_runtimeMaterial == null) {
-                return;
-            }
-
-            if (Application.isPlaying) {
-                Destroy(_runtimeMaterial);
-                return;
-            }
-
-            DestroyImmediate(_runtimeMaterial);
+            ReleaseRuntimeMaterial();
         }
 
         /// <summary>
@@ -83,11 +99,19 @@ namespace UnitySpriteAnimation {
         /// <returns>現在共有されている Material</returns>
         private Material GetSourceMaterial() {
             EnsureComponents();
-            return _spriteRenderer != null ? _spriteRenderer.sharedMaterial : null;
+            if (_spriteRenderer == null) {
+                return null;
+            }
+
+            if (_runtimeMaterial != null && _spriteRenderer.sharedMaterial == _runtimeMaterial) {
+                return _sourceMaterial;
+            }
+
+            return _spriteRenderer.sharedMaterial;
         }
 
         /// <summary>
-        /// FlipBookBlend に使う実体化済み Material を取得する
+        /// FlipBookBlend に使う複製済み Material を取得する
         /// </summary>
         /// <returns>Renderer 専用の Material</returns>
         private Material GetRuntimeMaterial() {
@@ -96,11 +120,57 @@ namespace UnitySpriteAnimation {
                 return null;
             }
 
-            if (_runtimeMaterial == null && SupportsFlipBookBlendMaterial(GetSourceMaterial())) {
-                _runtimeMaterial = _spriteRenderer.material;
+            var sourceMaterial = GetSourceMaterial();
+            if (!SupportsFlipBookBlendMaterial(sourceMaterial)) {
+                ReleaseRuntimeMaterial();
+                return null;
             }
 
+            if (_runtimeMaterial != null && _sourceMaterial == sourceMaterial) {
+                return _runtimeMaterial;
+            }
+
+            ReleaseRuntimeMaterial();
+
+            _sourceMaterial = sourceMaterial;
+            _runtimeMaterial = new Material(sourceMaterial) {
+                hideFlags = HideFlags.HideAndDontSave,
+                name = $"{sourceMaterial.name} (Clone)"
+            };
+            _spriteRenderer.sharedMaterial = _runtimeMaterial;
             return _runtimeMaterial;
+        }
+
+        /// <summary>
+        /// MaterialPropertyBlock の初期参照を補完する
+        /// </summary>
+        private void EnsurePropertyBlock() {
+            if (_materialPropertyBlock == null) {
+                _materialPropertyBlock = new MaterialPropertyBlock();
+            }
+        }
+
+        /// <summary>
+        /// 複製済み Material を解放する
+        /// </summary>
+        private void ReleaseRuntimeMaterial() {
+            if (_runtimeMaterial == null) {
+                return;
+            }
+
+            if (_spriteRenderer != null && _spriteRenderer.sharedMaterial == _runtimeMaterial) {
+                _spriteRenderer.sharedMaterial = _sourceMaterial;
+            }
+
+            if (Application.isPlaying) {
+                Destroy(_runtimeMaterial);
+            }
+            else {
+                DestroyImmediate(_runtimeMaterial);
+            }
+
+            _runtimeMaterial = null;
+            _sourceMaterial = null;
         }
 
         /// <summary>
@@ -120,6 +190,51 @@ namespace UnitySpriteAnimation {
             color.a = baseColor.a * Mathf.Clamp01(alpha);
             spriteRenderer.color = color;
             spriteRenderer.enabled = sprite != null && color.a > 0.0f;
+        }
+
+        /// <summary>
+        /// FlipBookBlend 用の property block を更新する
+        /// </summary>
+        /// <param name="currentSprite">現在表示する Sprite</param>
+        /// <param name="previousSprite">遷移元 Sprite</param>
+        /// <param name="fadeProgress">0.0-1.0 の補間率</param>
+        private void ApplyFlipBookBlendPropertyBlock(Sprite currentSprite, Sprite previousSprite, float fadeProgress) {
+            if (_spriteRenderer == null) {
+                return;
+            }
+
+            EnsurePropertyBlock();
+            _spriteRenderer.GetPropertyBlock(_materialPropertyBlock);
+            MaterialUtility.ApplyProperties(_materialPropertyBlock, currentSprite, previousSprite, fadeProgress);
+            _spriteRenderer.SetPropertyBlock(_materialPropertyBlock);
+        }
+
+        /// <summary>
+        /// FlipBookBlend 用の property block を通常表示状態へ戻す
+        /// </summary>
+        /// <param name="currentSprite">現在表示する Sprite</param>
+        private void ResetFlipBookBlendPropertyBlock(Sprite currentSprite) {
+            if (_spriteRenderer == null) {
+                return;
+            }
+
+            EnsurePropertyBlock();
+            _spriteRenderer.GetPropertyBlock(_materialPropertyBlock);
+            MaterialUtility.ResetProperties(_materialPropertyBlock, currentSprite);
+            _spriteRenderer.SetPropertyBlock(_materialPropertyBlock);
+        }
+
+        /// <summary>
+        /// MaterialPropertyBlock をクリアする
+        /// </summary>
+        private void ClearPropertyBlock() {
+            if (_spriteRenderer == null) {
+                return;
+            }
+
+            EnsurePropertyBlock();
+            _materialPropertyBlock.Clear();
+            _spriteRenderer.SetPropertyBlock(_materialPropertyBlock);
         }
     }
 }

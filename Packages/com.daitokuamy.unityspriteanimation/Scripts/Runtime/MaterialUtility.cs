@@ -53,6 +53,30 @@ namespace UnitySpriteAnimation {
         }
 
         /// <summary>
+        /// FlipBookBlend 用の MaterialPropertyBlock を更新する
+        /// </summary>
+        /// <param name="propertyBlock">更新対象 MaterialPropertyBlock</param>
+        /// <param name="currentSprite">現在表示する Sprite</param>
+        /// <param name="previousSprite">遷移元 Sprite</param>
+        /// <param name="fadeProgress">0.0-1.0 の補間率</param>
+        public static void ApplyProperties(MaterialPropertyBlock propertyBlock, Sprite currentSprite, Sprite previousSprite, float fadeProgress) {
+            if (propertyBlock == null) {
+                return;
+            }
+
+            var previousTexture = previousSprite != null && previousSprite.texture != null
+                ? previousSprite.texture
+                : Texture2D.blackTexture;
+
+            propertyBlock.SetTexture(PrevTexPropertyId, previousTexture);
+            propertyBlock.SetVector(CurrentTexUVRectPropertyId, GetSpriteUVRect(currentSprite));
+            propertyBlock.SetVector(PrevTexUVRectPropertyId, GetSpriteUVRect(previousSprite));
+            propertyBlock.SetVector(
+                FlipBookBlendParamsPropertyId,
+                new Vector4(previousSprite != null && currentSprite != null ? 1.0f : 0.0f, Mathf.Clamp01(fadeProgress), 0.0f, 0.0f));
+        }
+
+        /// <summary>
         /// FlipBookBlend 用の Material property を通常表示状態へ戻す
         /// </summary>
         /// <param name="material">更新対象 Material</param>
@@ -66,6 +90,22 @@ namespace UnitySpriteAnimation {
             material.SetVector(CurrentTexUVRectPropertyId, GetSpriteUVRect(currentSprite));
             material.SetVector(PrevTexUVRectPropertyId, DefaultSpriteUVRect);
             material.SetVector(FlipBookBlendParamsPropertyId, DisabledFlipBookBlendParams);
+        }
+
+        /// <summary>
+        /// FlipBookBlend 用の MaterialPropertyBlock を通常表示状態へ戻す
+        /// </summary>
+        /// <param name="propertyBlock">更新対象 MaterialPropertyBlock</param>
+        /// <param name="currentSprite">現在表示する Sprite</param>
+        public static void ResetProperties(MaterialPropertyBlock propertyBlock, Sprite currentSprite) {
+            if (propertyBlock == null) {
+                return;
+            }
+
+            propertyBlock.SetTexture(PrevTexPropertyId, Texture2D.blackTexture);
+            propertyBlock.SetVector(CurrentTexUVRectPropertyId, GetSpriteUVRect(currentSprite));
+            propertyBlock.SetVector(PrevTexUVRectPropertyId, DefaultSpriteUVRect);
+            propertyBlock.SetVector(FlipBookBlendParamsPropertyId, DisabledFlipBookBlendParams);
         }
 
         /// <summary>
