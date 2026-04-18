@@ -123,7 +123,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: spt_animations_0
+      name: spt_fireworks_0
       rect:
         serializedVersion: 2
         x: 0
@@ -138,14 +138,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: eb73de49b5b08434cbe8204fd46df44f
-      internalID: 915329388
+      spriteID: 12bb243a2f8cbd744a6c3edbc37b7584
+      internalID: -426633545
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_1
+      name: spt_fireworks_1
       rect:
         serializedVersion: 2
         x: 256
@@ -160,14 +160,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a5dc49bc17e93164aaec3969710dce77
-      internalID: 1556150366
+      spriteID: 169be1a19398f694089d8905ca635dcf
+      internalID: 1100740184
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_2
+      name: spt_fireworks_2
       rect:
         serializedVersion: 2
         x: 512
@@ -182,14 +182,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 4ee91b700fbb0c240ad6302bdf4f1c54
-      internalID: 376065497
+      spriteID: aa6846a566e106c4b901fb0abd15f1b1
+      internalID: 1419678712
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_3
+      name: spt_fireworks_3
       rect:
         serializedVersion: 2
         x: 768
@@ -204,14 +204,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d555ed6e89df69b479215baee0e7a58f
-      internalID: -697033988
+      spriteID: e1835ecc728845e4f92dcc5ff6a58e90
+      internalID: 1597111525
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_4
+      name: spt_fireworks_4
       rect:
         serializedVersion: 2
         x: 1024
@@ -226,14 +226,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b93736c9ac43c264c8f3ccc6d488ac40
-      internalID: 1714489396
+      spriteID: 2435ff469c69d2040bf79bb27c166403
+      internalID: -1796278564
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_5
+      name: spt_fireworks_5
       rect:
         serializedVersion: 2
         x: 1280
@@ -248,14 +248,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a65042d599afce344bb45d88a064bcc5
-      internalID: 1532086405
+      spriteID: 768d4998c9301ce49aaf1c6df97ee1fb
+      internalID: 1779421237
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_6
+      name: spt_fireworks_6
       rect:
         serializedVersion: 2
         x: 1536
@@ -270,14 +270,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 1906fde344c334b4dbcb9ae94e92ebd2
-      internalID: -1306367876
+      spriteID: d34ff87eaa575384685730deba130661
+      internalID: -228052362
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_7
+      name: spt_fireworks_7
       rect:
         serializedVersion: 2
         x: 1792
@@ -292,14 +292,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8d509202aac7bfe489ea1edeb9baac5e
-      internalID: -636516463
+      spriteID: 6b5e6acdb893d1948877c7a46bed0547
+      internalID: -1988458541
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_8
+      name: spt_fireworks_8
       rect:
         serializedVersion: 2
         x: 0
@@ -314,14 +314,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: aaf3ea29bb8255e4daff6cdfdca4da3a
-      internalID: -1143435643
+      spriteID: 445d27812f8a9314b9a55c56d499567b
+      internalID: 660935580
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_9
+      name: spt_fireworks_9
       rect:
         serializedVersion: 2
         x: 256
@@ -336,14 +336,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 438ded75a054bd0478d1144e27d6df13
-      internalID: -1711783441
+      spriteID: f52a9fcc86dbbcb468763341159f9370
+      internalID: 1875314548
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_10
+      name: spt_fireworks_10
       rect:
         serializedVersion: 2
         x: 512
@@ -358,14 +358,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ce87d64903e122c4ca2df87dcbe395bb
-      internalID: 1629198220
+      spriteID: eef8d8830df2ae24ca122f87f001af15
+      internalID: 1195442741
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_11
+      name: spt_fireworks_11
       rect:
         serializedVersion: 2
         x: 768
@@ -380,14 +380,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 0d9ec0f9684d39c43b9d90ecbc80920c
-      internalID: -1495624574
+      spriteID: 3f32bd3ce1c4dbe4c9319b99f4613fd1
+      internalID: -1320276262
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_12
+      name: spt_fireworks_12
       rect:
         serializedVersion: 2
         x: 1024
@@ -402,14 +402,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 87cd368abe26cf844906c66bc49eb527
-      internalID: -808736085
+      spriteID: e067d1fee7bd2d746aa9e33fac59a3fc
+      internalID: -1404484100
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_13
+      name: spt_fireworks_13
       rect:
         serializedVersion: 2
         x: 1280
@@ -424,14 +424,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c9d08a4dc341a5b4792becf4d817d7e9
-      internalID: 1461239126
+      spriteID: 4a89ab3311193b1428436e9170156f2a
+      internalID: -1032117216
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_14
+      name: spt_fireworks_14
       rect:
         serializedVersion: 2
         x: 1536
@@ -446,14 +446,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 19c8eb123f86f14438292d7bfc992f63
-      internalID: -121317730
+      spriteID: 36f3a9bb9e1ddf7499e57889111358a4
+      internalID: -745356974
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_15
+      name: spt_fireworks_15
       rect:
         serializedVersion: 2
         x: 1792
@@ -468,14 +468,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9d24644776b3a8d4abb9b44302330d27
-      internalID: -2060485920
+      spriteID: 05cc1205a5764684a85f08acd1ca76db
+      internalID: -1090595915
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_16
+      name: spt_fireworks_16
       rect:
         serializedVersion: 2
         x: 0
@@ -490,14 +490,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8dc3cb69bdf3362468871ee69c544ab7
-      internalID: -1528509564
+      spriteID: 1dfcbfa7d8b3d0f4893b5012427241f4
+      internalID: -1611609844
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_17
+      name: spt_fireworks_17
       rect:
         serializedVersion: 2
         x: 256
@@ -512,14 +512,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 909af397e5281a24896327aedac15b87
-      internalID: 699216486
+      spriteID: f011dba1c34364848b39c81809acaaf1
+      internalID: -1069197857
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_18
+      name: spt_fireworks_18
       rect:
         serializedVersion: 2
         x: 512
@@ -534,14 +534,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a574ba4c54b58b34883572fb8fb5fad4
-      internalID: -540472577
+      spriteID: f01f1244319d6ff429823cc48884065c
+      internalID: 1801075218
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_19
+      name: spt_fireworks_19
       rect:
         serializedVersion: 2
         x: 768
@@ -556,14 +556,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b5301da83239191418a32aa21de72af0
-      internalID: -103634312
+      spriteID: fc08e153cf37a0745ac7fe8b07c308ac
+      internalID: 1337826478
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_20
+      name: spt_fireworks_20
       rect:
         serializedVersion: 2
         x: 1024
@@ -578,14 +578,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5166a7e644f0a224e97870fd9c43b95a
-      internalID: -211245622
+      spriteID: 1083bf2294714eb4f9f6323759833e14
+      internalID: -1944264838
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_21
+      name: spt_fireworks_21
       rect:
         serializedVersion: 2
         x: 1280
@@ -600,14 +600,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2ceeba86472bcfa499f7638f83aeb36a
-      internalID: 1327840955
+      spriteID: 80492a5da42058647b17794e634bd278
+      internalID: 244581151
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_22
+      name: spt_fireworks_22
       rect:
         serializedVersion: 2
         x: 1536
@@ -622,14 +622,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: f9b980af3cb25a6428f7e59aa1ffdd29
-      internalID: -1798527888
+      spriteID: 1ff37ecb85e96104297da77f8f48840b
+      internalID: -518678673
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_23
+      name: spt_fireworks_23
       rect:
         serializedVersion: 2
         x: 1792
@@ -644,14 +644,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2718795d1e1ef904eac032e0e33f4f11
-      internalID: 67602611
+      spriteID: 05173f6929c612142a3449dfb1064682
+      internalID: -246400061
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_24
+      name: spt_fireworks_24
       rect:
         serializedVersion: 2
         x: 0
@@ -666,14 +666,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ca15726b5e182384ea1829772057386d
-      internalID: 565730093
+      spriteID: 61f6937af691eb3429a2e79c31f23009
+      internalID: -1597021328
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_25
+      name: spt_fireworks_25
       rect:
         serializedVersion: 2
         x: 256
@@ -688,14 +688,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: ca9125ba9f3de2c4097a388780d829b4
-      internalID: 1152720341
+      spriteID: a0d6622e3b442e14f87fe23f06dc7aff
+      internalID: -642089558
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_26
+      name: spt_fireworks_26
       rect:
         serializedVersion: 2
         x: 512
@@ -710,14 +710,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 59295fd1eb4dd3f478773e8ee431004c
-      internalID: -1663512614
+      spriteID: 51cf2e008bcf8f442b7445974d68892f
+      internalID: -569875793
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_27
+      name: spt_fireworks_27
       rect:
         serializedVersion: 2
         x: 768
@@ -732,14 +732,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 9f0570ab9c62a8046babaf3d0cdf5287
-      internalID: -1958814718
+      spriteID: d047875e254c4a940b1c4986fa4a8959
+      internalID: 277709548
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_28
+      name: spt_fireworks_28
       rect:
         serializedVersion: 2
         x: 1024
@@ -754,14 +754,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: bde59c9a1090c8f499c21f5c16f8aa91
-      internalID: 1386005746
+      spriteID: 62914d7c07c3fd644a83cba36068f403
+      internalID: 998738236
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_29
+      name: spt_fireworks_29
       rect:
         serializedVersion: 2
         x: 1280
@@ -776,14 +776,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: e6c54642b0df24d4a96f9339a331c0ae
-      internalID: 516699965
+      spriteID: 2a4bb4ed59338a540a7602fc57a29417
+      internalID: 415514642
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_30
+      name: spt_fireworks_30
       rect:
         serializedVersion: 2
         x: 1536
@@ -798,14 +798,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a82c41f1af9df3341a853b6b1162a25f
-      internalID: -331110540
+      spriteID: 59e883e38571ec94aa99dbba42789d43
+      internalID: 1394991031
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_31
+      name: spt_fireworks_31
       rect:
         serializedVersion: 2
         x: 1792
@@ -820,14 +820,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: cdbc3f7c137b8da458ad7b1f75923e39
-      internalID: 1767230491
+      spriteID: b0c9918b6dd99fb40a28c8d934e22325
+      internalID: -803771102
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_32
+      name: spt_fireworks_32
       rect:
         serializedVersion: 2
         x: 0
@@ -842,14 +842,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2eec0f9ad6aa0ad41a0ce9531488f35b
-      internalID: 409324739
+      spriteID: eb5fadb439f8dc54c8746e9320770954
+      internalID: 302577947
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_33
+      name: spt_fireworks_33
       rect:
         serializedVersion: 2
         x: 256
@@ -864,14 +864,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 85dbda73628845341b8793f96c8c69e1
-      internalID: 1631041101
+      spriteID: 910dc4723c84ab045b0497db30933335
+      internalID: 1884803388
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_34
+      name: spt_fireworks_34
       rect:
         serializedVersion: 2
         x: 512
@@ -886,14 +886,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 3375f83adab20ac4f9081d658b3524b7
-      internalID: -511206607
+      spriteID: 5bceaca65da4d994481d39fa44b3b125
+      internalID: -783158252
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_35
+      name: spt_fireworks_35
       rect:
         serializedVersion: 2
         x: 768
@@ -908,14 +908,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c62f64e59848c1f4380bec854e9b2fb8
-      internalID: 884139310
+      spriteID: c0c23df93548f8745b16622ab56707b5
+      internalID: 667411045
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_36
+      name: spt_fireworks_36
       rect:
         serializedVersion: 2
         x: 1024
@@ -930,14 +930,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 12dfe2f4463d5fb4fbd043cb59bc4849
-      internalID: 1068646551
+      spriteID: 989f7bad1cb97eb43afa1b8eb68d9a71
+      internalID: 746630960
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_37
+      name: spt_fireworks_37
       rect:
         serializedVersion: 2
         x: 1280
@@ -952,14 +952,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 2918b5d6b4af30c46a23781a33b47371
-      internalID: -308142404
+      spriteID: f6e4510c0c40f704781770c675527f44
+      internalID: -1124344617
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_38
+      name: spt_fireworks_38
       rect:
         serializedVersion: 2
         x: 1536
@@ -974,14 +974,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 36cb4941502df514ab0385dd39632ba0
-      internalID: 465171251
+      spriteID: 86856e13a7189b443aa6a71760bfce4a
+      internalID: 1606982035
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_39
+      name: spt_fireworks_39
       rect:
         serializedVersion: 2
         x: 1792
@@ -996,14 +996,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5b1feab4958ac8346832f807daa77c10
-      internalID: -873298597
+      spriteID: 04d07343a44efe844af07ec0803b8cd9
+      internalID: -867302938
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_40
+      name: spt_fireworks_40
       rect:
         serializedVersion: 2
         x: 0
@@ -1018,14 +1018,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 5130c2598002be740a0ff3cf911acc3c
-      internalID: -1398146504
+      spriteID: 92eab1c1753f1a64c9a10565cb24e887
+      internalID: -1073123790
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_41
+      name: spt_fireworks_41
       rect:
         serializedVersion: 2
         x: 256
@@ -1040,14 +1040,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 15608c3d96497df4fa116c2ac184746c
-      internalID: 558706387
+      spriteID: 2f38b36ef17b5f344bbec479aa3641bf
+      internalID: -1643180021
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_42
+      name: spt_fireworks_42
       rect:
         serializedVersion: 2
         x: 512
@@ -1062,14 +1062,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 93bca556c429af24383f90c1aef2afd6
-      internalID: 681371380
+      spriteID: 3edf5610575eba648b7a9c0f6a0f9015
+      internalID: -480305300
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_43
+      name: spt_fireworks_43
       rect:
         serializedVersion: 2
         x: 768
@@ -1084,14 +1084,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c7badf637000150478f59c2a6d387b50
-      internalID: -656384514
+      spriteID: 1d16a8b9f5a0b37469de8776ec347dcd
+      internalID: 964650898
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_44
+      name: spt_fireworks_44
       rect:
         serializedVersion: 2
         x: 1024
@@ -1106,14 +1106,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a3bc6e6e5ff0362418ef3a14075351be
-      internalID: -1792180254
+      spriteID: 8a1b408b3b06b11499033dc652a3bcd0
+      internalID: -1996077429
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_45
+      name: spt_fireworks_45
       rect:
         serializedVersion: 2
         x: 1280
@@ -1128,14 +1128,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c0bcfe9a6def61b40bb828883f2e4912
-      internalID: 2004583481
+      spriteID: aa6aa8a289e7ab84c981c90dcc90bc91
+      internalID: -2087300262
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_46
+      name: spt_fireworks_46
       rect:
         serializedVersion: 2
         x: 1536
@@ -1150,14 +1150,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 291d2b663762c514e854461d62c26277
-      internalID: 907126377
+      spriteID: b992f6cac1f614740ac4cf28cd70d609
+      internalID: 1071655111
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_47
+      name: spt_fireworks_47
       rect:
         serializedVersion: 2
         x: 1792
@@ -1172,14 +1172,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d64addc6186311e41b19982a06578cd0
-      internalID: -1155362971
+      spriteID: 19ecf107ff0d8c740ab505de00b4421c
+      internalID: 240739922
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_48
+      name: spt_fireworks_48
       rect:
         serializedVersion: 2
         x: 0
@@ -1194,14 +1194,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 91ef68f9a9830e8428b52f6031cecbcc
-      internalID: 746269710
+      spriteID: 8725c7ada813a9f408e1d36c2c019816
+      internalID: 638657312
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_49
+      name: spt_fireworks_49
       rect:
         serializedVersion: 2
         x: 256
@@ -1216,14 +1216,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a19d457eae691504b81285af7d69712a
-      internalID: -93260064
+      spriteID: cceecb8ca848699439f3c0607860eae8
+      internalID: 13210606
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_50
+      name: spt_fireworks_50
       rect:
         serializedVersion: 2
         x: 512
@@ -1238,14 +1238,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: cb018e3afcd5163499703cf442e61459
-      internalID: -1618814142
+      spriteID: f3c8e1e7fcd83034ebd589d4ff20b5fd
+      internalID: -1170292043
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_51
+      name: spt_fireworks_51
       rect:
         serializedVersion: 2
         x: 768
@@ -1260,14 +1260,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 33e4ff3b8502da344bc6739a4aa3aa9e
-      internalID: -1503929617
+      spriteID: ef738783b40c682428f789c63a7292d2
+      internalID: 544504428
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_52
+      name: spt_fireworks_52
       rect:
         serializedVersion: 2
         x: 1024
@@ -1282,14 +1282,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: cb2a48ea83fdfc7418a80a4beb1631a2
-      internalID: -1673126049
+      spriteID: 7c56a05ec323a33489fcb6c29fff02b0
+      internalID: 220077182
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_53
+      name: spt_fireworks_53
       rect:
         serializedVersion: 2
         x: 1280
@@ -1304,14 +1304,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 644e5a32aa5cdc444ae718616e68aa56
-      internalID: -313836202
+      spriteID: 8a78eee089030284c91b130c772e3e7e
+      internalID: 1326749099
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_54
+      name: spt_fireworks_54
       rect:
         serializedVersion: 2
         x: 1536
@@ -1326,14 +1326,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d8d76d14dc9f1bc48b6439efd2d13e54
-      internalID: -1124928367
+      spriteID: a9945680e6bc4674a9442d429a12d256
+      internalID: 437363895
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_55
+      name: spt_fireworks_55
       rect:
         serializedVersion: 2
         x: 1792
@@ -1348,14 +1348,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 7715dad297d12ca4abc3cbff3523d703
-      internalID: -1072658077
+      spriteID: 525da672204baa2418c7a34af43c66d4
+      internalID: -1395346687
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_56
+      name: spt_fireworks_56
       rect:
         serializedVersion: 2
         x: 0
@@ -1370,14 +1370,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: a5c8ff1172956be459c7445e3faaf88d
-      internalID: -2089911513
+      spriteID: 197faca06ad8cba469126abfae4c5d5c
+      internalID: -2121339777
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_57
+      name: spt_fireworks_57
       rect:
         serializedVersion: 2
         x: 256
@@ -1392,14 +1392,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: daead6974bdf6df4380d3f15a18193c0
-      internalID: 19380488
+      spriteID: 3c23b37401f05f94ba14a7ff85ea89a3
+      internalID: -184834568
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: spt_animations_58
+      name: spt_fireworks_58
       rect:
         serializedVersion: 2
         x: 512
@@ -1414,8 +1414,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 69360070a90bcea4dba29e59886265f6
-      internalID: 1196002813
+      spriteID: 0f617625f6e8ba840bb3b56067310e40
+      internalID: 757876593
       vertices: []
       indices: 
       edges: []
@@ -1436,70 +1436,70 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":8.0,"y":8.0},"gridSpriteSize":{"x":256.0,"y":256.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      spt_animations_0: 915329388
-      spt_animations_1: 1556150366
-      spt_animations_10: 1629198220
-      spt_animations_11: -1495624574
-      spt_animations_12: -808736085
-      spt_animations_13: 1461239126
-      spt_animations_14: -121317730
-      spt_animations_15: -2060485920
-      spt_animations_16: -1528509564
-      spt_animations_17: 699216486
-      spt_animations_18: -540472577
-      spt_animations_19: -103634312
-      spt_animations_2: 376065497
-      spt_animations_20: -211245622
-      spt_animations_21: 1327840955
-      spt_animations_22: -1798527888
-      spt_animations_23: 67602611
-      spt_animations_24: 565730093
-      spt_animations_25: 1152720341
-      spt_animations_26: -1663512614
-      spt_animations_27: -1958814718
-      spt_animations_28: 1386005746
-      spt_animations_29: 516699965
-      spt_animations_3: -697033988
-      spt_animations_30: -331110540
-      spt_animations_31: 1767230491
-      spt_animations_32: 409324739
-      spt_animations_33: 1631041101
-      spt_animations_34: -511206607
-      spt_animations_35: 884139310
-      spt_animations_36: 1068646551
-      spt_animations_37: -308142404
-      spt_animations_38: 465171251
-      spt_animations_39: -873298597
-      spt_animations_4: 1714489396
-      spt_animations_40: -1398146504
-      spt_animations_41: 558706387
-      spt_animations_42: 681371380
-      spt_animations_43: -656384514
-      spt_animations_44: -1792180254
-      spt_animations_45: 2004583481
-      spt_animations_46: 907126377
-      spt_animations_47: -1155362971
-      spt_animations_48: 746269710
-      spt_animations_49: -93260064
-      spt_animations_5: 1532086405
-      spt_animations_50: -1618814142
-      spt_animations_51: -1503929617
-      spt_animations_52: -1673126049
-      spt_animations_53: -313836202
-      spt_animations_54: -1124928367
-      spt_animations_55: -1072658077
-      spt_animations_56: -2089911513
-      spt_animations_57: 19380488
-      spt_animations_58: 1196002813
-      spt_animations_59: -990176976
-      spt_animations_6: -1306367876
-      spt_animations_60: -1902712436
-      spt_animations_61: -1514111476
-      spt_animations_62: 1663540121
-      spt_animations_63: 1266361954
-      spt_animations_7: -636516463
-      spt_animations_8: -1143435643
-      spt_animations_9: -1711783441
+      spt_fireworks_0: -426633545
+      spt_fireworks_1: 1100740184
+      spt_fireworks_10: 1195442741
+      spt_fireworks_11: -1320276262
+      spt_fireworks_12: -1404484100
+      spt_fireworks_13: -1032117216
+      spt_fireworks_14: -745356974
+      spt_fireworks_15: -1090595915
+      spt_fireworks_16: -1611609844
+      spt_fireworks_17: -1069197857
+      spt_fireworks_18: 1801075218
+      spt_fireworks_19: 1337826478
+      spt_fireworks_2: 1419678712
+      spt_fireworks_20: -1944264838
+      spt_fireworks_21: 244581151
+      spt_fireworks_22: -518678673
+      spt_fireworks_23: -246400061
+      spt_fireworks_24: -1597021328
+      spt_fireworks_25: -642089558
+      spt_fireworks_26: -569875793
+      spt_fireworks_27: 277709548
+      spt_fireworks_28: 998738236
+      spt_fireworks_29: 415514642
+      spt_fireworks_3: 1597111525
+      spt_fireworks_30: 1394991031
+      spt_fireworks_31: -803771102
+      spt_fireworks_32: 302577947
+      spt_fireworks_33: 1884803388
+      spt_fireworks_34: -783158252
+      spt_fireworks_35: 667411045
+      spt_fireworks_36: 746630960
+      spt_fireworks_37: -1124344617
+      spt_fireworks_38: 1606982035
+      spt_fireworks_39: -867302938
+      spt_fireworks_4: -1796278564
+      spt_fireworks_40: -1073123790
+      spt_fireworks_41: -1643180021
+      spt_fireworks_42: -480305300
+      spt_fireworks_43: 964650898
+      spt_fireworks_44: -1996077429
+      spt_fireworks_45: -2087300262
+      spt_fireworks_46: 1071655111
+      spt_fireworks_47: 240739922
+      spt_fireworks_48: 638657312
+      spt_fireworks_49: 13210606
+      spt_fireworks_5: 1779421237
+      spt_fireworks_50: -1170292043
+      spt_fireworks_51: 544504428
+      spt_fireworks_52: 220077182
+      spt_fireworks_53: 1326749099
+      spt_fireworks_54: 437363895
+      spt_fireworks_55: -1395346687
+      spt_fireworks_56: -2121339777
+      spt_fireworks_57: -184834568
+      spt_fireworks_58: 757876593
+      spt_fireworks_59: 2010168396
+      spt_fireworks_6: -228052362
+      spt_fireworks_60: 970021037
+      spt_fireworks_61: 1782464622
+      spt_fireworks_62: -2096549740
+      spt_fireworks_63: 37688188
+      spt_fireworks_7: -1988458541
+      spt_fireworks_8: 660935580
+      spt_fireworks_9: 1875314548
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -10,40 +10,20 @@ namespace UnitySpriteAnimation {
         [SerializeField, Tooltip("通常表示に使用する Image")]
         private Image _image;
 
-        [SerializeField, Tooltip("FlipBookBlend の遷移元表示に使用する Image")]
-        private Image _flipBookBlendImage;
-
         private Color _imageBaseColor = Color.white;
 
         /// <inheritdoc />
-        protected override bool CanUseFlipBookBlend {
-            get {
-                EnsureComponents();
-                return _image != null &&
-                    _flipBookBlendImage != null &&
-                    _image != _flipBookBlendImage;
-            }
-        }
+        protected override bool CanUseFlipBookBlend => false;
 
         /// <inheritdoc />
         protected override void ApplySingleSprite(Sprite sprite) {
             EnsureComponents();
-            SyncFlipBookBlendImageSettings();
             ApplyImageState(_image, sprite, 1.0f, _imageBaseColor);
-            ApplyImageState(_flipBookBlendImage, null, 0.0f, _imageBaseColor);
         }
 
         /// <inheritdoc />
         protected override void ApplyFlipBookBlend(Sprite fromSprite, Sprite toSprite, float fadeProgress) {
-            EnsureComponents();
-            if (!CanUseFlipBookBlend) {
-                ApplySingleSprite(toSprite);
-                return;
-            }
-
-            SyncFlipBookBlendImageSettings();
-            ApplyImageState(_image, toSprite, fadeProgress, _imageBaseColor);
-            ApplyImageState(_flipBookBlendImage, fromSprite, 1.0f - fadeProgress, _imageBaseColor);
+            ApplySingleSprite(toSprite);
         }
 
         /// <inheritdoc />
@@ -66,21 +46,6 @@ namespace UnitySpriteAnimation {
             if (_image == null) {
                 _image = GetComponent<Image>();
             }
-        }
-
-        /// <summary>
-        /// FlipBookBlend 用 Image の見た目設定を同期する
-        /// </summary>
-        private void SyncFlipBookBlendImageSettings() {
-            if (_image == null || _flipBookBlendImage == null) {
-                return;
-            }
-
-            _flipBookBlendImage.material = _image.material;
-            _flipBookBlendImage.type = _image.type;
-            _flipBookBlendImage.preserveAspect = _image.preserveAspect;
-            _flipBookBlendImage.useSpriteMesh = _image.useSpriteMesh;
-            _flipBookBlendImage.pixelsPerUnitMultiplier = _image.pixelsPerUnitMultiplier;
         }
 
         /// <summary>

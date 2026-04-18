@@ -9,40 +9,20 @@ namespace UnitySpriteAnimation {
         [SerializeField, Tooltip("通常表示に使用する SpriteRenderer")]
         private SpriteRenderer _spriteRenderer;
 
-        [SerializeField, Tooltip("FlipBookBlend の遷移元表示に使用する SpriteRenderer")]
-        private SpriteRenderer _flipBookBlendSpriteRenderer;
-
         private Color _spriteRendererBaseColor = Color.white;
 
         /// <inheritdoc />
-        protected override bool CanUseFlipBookBlend {
-            get {
-                EnsureComponents();
-                return _spriteRenderer != null &&
-                    _flipBookBlendSpriteRenderer != null &&
-                    _spriteRenderer != _flipBookBlendSpriteRenderer;
-            }
-        }
+        protected override bool CanUseFlipBookBlend => false;
 
         /// <inheritdoc />
         protected override void ApplySingleSprite(Sprite sprite) {
             EnsureComponents();
-            SyncFlipBookBlendSpriteRendererSettings();
             ApplySpriteRendererState(_spriteRenderer, sprite, 1.0f, _spriteRendererBaseColor);
-            ApplySpriteRendererState(_flipBookBlendSpriteRenderer, null, 0.0f, _spriteRendererBaseColor);
         }
 
         /// <inheritdoc />
         protected override void ApplyFlipBookBlend(Sprite fromSprite, Sprite toSprite, float fadeProgress) {
-            EnsureComponents();
-            if (!CanUseFlipBookBlend) {
-                ApplySingleSprite(toSprite);
-                return;
-            }
-
-            SyncFlipBookBlendSpriteRendererSettings();
-            ApplySpriteRendererState(_spriteRenderer, toSprite, fadeProgress, _spriteRendererBaseColor);
-            ApplySpriteRendererState(_flipBookBlendSpriteRenderer, fromSprite, 1.0f - fadeProgress, _spriteRendererBaseColor);
+            ApplySingleSprite(toSprite);
         }
 
         /// <inheritdoc />
@@ -65,23 +45,6 @@ namespace UnitySpriteAnimation {
             if (_spriteRenderer == null) {
                 _spriteRenderer = GetComponent<SpriteRenderer>();
             }
-        }
-
-        /// <summary>
-        /// FlipBookBlend 用 SpriteRenderer の見た目設定を同期する
-        /// </summary>
-        private void SyncFlipBookBlendSpriteRendererSettings() {
-            if (_spriteRenderer == null || _flipBookBlendSpriteRenderer == null) {
-                return;
-            }
-
-            _flipBookBlendSpriteRenderer.sharedMaterial = _spriteRenderer.sharedMaterial;
-            _flipBookBlendSpriteRenderer.sortingLayerID = _spriteRenderer.sortingLayerID;
-            _flipBookBlendSpriteRenderer.sortingOrder = _spriteRenderer.sortingOrder + 1;
-            _flipBookBlendSpriteRenderer.flipX = _spriteRenderer.flipX;
-            _flipBookBlendSpriteRenderer.flipY = _spriteRenderer.flipY;
-            _flipBookBlendSpriteRenderer.drawMode = _spriteRenderer.drawMode;
-            _flipBookBlendSpriteRenderer.size = _spriteRenderer.size;
         }
 
         /// <summary>
