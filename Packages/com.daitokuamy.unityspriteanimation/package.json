@@ -1,0 +1,13 @@
+{
+    "name": "com.daitokuamy.unityspriteanimation",
+    "displayName": "Unity Sprite Animation",
+    "version": "1.0.0",
+    "unity": "6000.0",
+    "license" : "MIT",
+    "dependencies": { },
+    "author": {
+        "name": "Hironori Ito",
+        "url": "https://github.com/DaitokuAmy"
+    },
+    "description": "A library for easily playing sprite animations in Unity."
+}

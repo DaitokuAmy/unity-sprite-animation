@@ -1,0 +1,20 @@
+{
+    "name": "UnitySpriteAnimation.Editor",
+    "rootNamespace": "UnitySpriteAnimation.Editor",
+    "references": [
+        "GUID:f06555f75b070af458a003d92f9efb00",
+        "GUID:02f771204943f4a40949438e873e3eff",
+        "GUID:9b2c403d12b8fd0468c4ee75699d5ea9"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

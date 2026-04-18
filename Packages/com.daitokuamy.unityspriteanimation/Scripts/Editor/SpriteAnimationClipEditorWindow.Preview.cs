@@ -1,0 +1,626 @@
+using System;
+using UnityEditor;
+using UnityEngine;
+
+namespace UnitySpriteAnimation.Editor {
+    /// <summary>
+    /// SpriteAnimationClipEditorWindow のプレビュー関連処理
+    /// </summary>
+    public sealed partial class SpriteAnimationClipEditorWindow {
+        /// <summary>
+        /// プレビュー用アイコン種別
+        /// </summary>
+        private enum PreviewButtonIcon {
+            First,
+            Previous,
+            Play,
+            Pause,
+            Next,
+            Last,
+        }
+
+        /// <summary>
+        /// プレビュー再生開始
+        /// </summary>
+        private void PlayPreview() {
+            if (_clip == null || !_clip.CanPlay) {
+                return;
+            }
+
+            _isPreviewPlaying = true;
+            _isPreviewPaused = false;
+            SetPreviewTime(0.0f, syncSelectedFrame: true);
+            _previewStartTime = EditorApplication.timeSinceStartup;
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// プレビュー再生一時停止
+        /// </summary>
+        private void PausePreview() {
+            if (!_isPreviewPlaying) {
+                return;
+            }
+
+            _isPreviewPlaying = false;
+            _isPreviewPaused = true;
+            SetPreviewTime(GetCurrentPreviewTime(), syncSelectedFrame: true);
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// プレビュー停止
+        /// </summary>
+        private void StopPreview() {
+            _isPreviewPlaying = false;
+            _isPreviewPaused = false;
+            SetPreviewTime(0.0f, syncSelectedFrame: true);
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// 先頭フレームへ移動
+        /// </summary>
+        private void MovePreviewToFirstFrame() {
+            if (_clip == null || !_clip.CanPlay) {
+                return;
+            }
+
+            _isPreviewPlaying = false;
+            _isPreviewPaused = false;
+            SetPreviewTime(0.0f, syncSelectedFrame: true);
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// 前フレームへ移動
+        /// </summary>
+        private void MovePreviewToPreviousFrame() {
+            MovePreviewByFrame(-1);
+        }
+
+        /// <summary>
+        /// 次フレームへ移動
+        /// </summary>
+        private void MovePreviewToNextFrame() {
+            MovePreviewByFrame(1);
+        }
+
+        /// <summary>
+        /// 末尾フレームへ移動
+        /// </summary>
+        private void MovePreviewToLastFrame() {
+            if (_clip == null || !_clip.CanPlay) {
+                return;
+            }
+
+            _isPreviewPlaying = false;
+            _isPreviewPaused = false;
+            var lastFrameIndex = Mathf.Max(0, _clip.FrameCount - 1);
+            SetPreviewTime(lastFrameIndex / Mathf.Max(0.01f, _clip.FrameRate), syncSelectedFrame: true);
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// フレーム単位でプレビュー位置を移動する
+        /// </summary>
+        /// <param name="offset">移動フレーム量</param>
+        private void MovePreviewByFrame(int offset) {
+            if (_clip == null || !_clip.CanPlay) {
+                return;
+            }
+
+            _isPreviewPlaying = false;
+            _isPreviewPaused = false;
+
+            var currentFrameIndex = Mathf.Max(0, _clip.GetFrameIndex(_previewTime));
+            var nextFrameIndex = Mathf.Clamp(currentFrameIndex + offset, 0, Mathf.Max(0, _clip.FrameCount - 1));
+            SetPreviewTime(nextFrameIndex / Mathf.Max(0.01f, _clip.FrameRate), syncSelectedFrame: true);
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// プレビュー再生状態を切り替える
+        /// </summary>
+        private void TogglePreviewPlayback() {
+            if (_isPreviewPlaying) {
+                PausePreview();
+                return;
+            }
+
+            if (_isPreviewPaused && _clip != null && _clip.CanPlay) {
+                _isPreviewPlaying = true;
+                _isPreviewPaused = false;
+                _previewStartTime = EditorApplication.timeSinceStartup - _previewTime;
+                RefreshPreview();
+                return;
+            }
+
+            PlayPreview();
+        }
+
+        /// <summary>
+        /// Editor更新処理
+        /// </summary>
+        private void OnEditorUpdate() {
+            if (!_isPreviewPlaying || _clip == null || !_clip.CanPlay) {
+                return;
+            }
+
+            SetPreviewTime(GetCurrentPreviewTime(), syncSelectedFrame: false);
+            if (!_clip.Loop && _previewTime >= _clip.Duration) {
+                _isPreviewPlaying = false;
+                _isPreviewPaused = false;
+                SetPreviewTime(_clip.Duration, syncSelectedFrame: true);
+            }
+
+            SyncSelectedFrameToPreview();
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// Undo/Redo時処理
+        /// </summary>
+        private void OnUndoRedoPerformed() {
+            if (_clip == null) {
+                return;
+            }
+
+            SetClip(_clip);
+        }
+
+        /// <summary>
+        /// プレビュー領域描画
+        /// </summary>
+        private void DrawPreviewGui() {
+            var rect = GUILayoutUtility.GetRect(10.0f, 10000.0f, 10.0f, 10000.0f);
+            EditorGUI.DrawRect(rect, new Color(0.10f, 0.10f, 0.10f));
+            var contentRect = new Rect(rect.x, rect.y, rect.width, Mathf.Max(0.0f, rect.height - PreviewBottomPadding));
+
+            if (_clip == null) {
+                EditorGUI.DropShadowLabel(contentRect, "SpriteAnimationClip を選択してください");
+            }
+            else {
+                DrawPreviewSprite(contentRect);
+            }
+
+            if (_clip != null) {
+                var infoRect = new Rect(rect.x + 8.0f, rect.y + 8.0f, rect.width - 16.0f, 36.0f);
+                var stateLabel = _isPreviewPlaying ? "Playing" : "Stopped";
+                EditorGUI.DropShadowLabel(infoRect, $"{stateLabel}  Time: {_previewTime:0.000}s  Frame: {_clip.GetFrameIndex(_previewTime)}");
+            }
+
+            DrawPreviewPlaybackButtons(rect);
+        }
+
+        /// <summary>
+        /// プレビュー下部の再生ボタンを描画する
+        /// </summary>
+        /// <param name="rect">プレビュー領域</param>
+        private void DrawPreviewPlaybackButtons(Rect rect) {
+            const float buttonSize = 36.0f;
+            const float spacing = 6.0f;
+            const float bottomMargin = 10.0f;
+
+            var totalWidth = (buttonSize * 5.0f) + (spacing * 4.0f);
+            var startX = rect.center.x - (totalWidth * 0.5f);
+            var y = rect.yMax - buttonSize - bottomMargin;
+
+            if (DrawPreviewIconButton(new Rect(startX, y, buttonSize, buttonSize), PreviewButtonIcon.First, "First Frame")) {
+                MovePreviewToFirstFrame();
+            }
+
+            if (DrawPreviewIconButton(new Rect(startX + ((buttonSize + spacing) * 1.0f), y, buttonSize, buttonSize), PreviewButtonIcon.Previous, "Previous Frame")) {
+                MovePreviewToPreviousFrame();
+            }
+
+            if (DrawPreviewIconButton(new Rect(startX + ((buttonSize + spacing) * 2.0f), y, buttonSize, buttonSize), _isPreviewPlaying ? PreviewButtonIcon.Pause : PreviewButtonIcon.Play,
+                    _isPreviewPlaying ? "Pause Preview" : "Play Preview")) {
+                TogglePreviewPlayback();
+            }
+
+            if (DrawPreviewIconButton(new Rect(startX + ((buttonSize + spacing) * 3.0f), y, buttonSize, buttonSize), PreviewButtonIcon.Next, "Next Frame")) {
+                MovePreviewToNextFrame();
+            }
+
+            if (DrawPreviewIconButton(new Rect(startX + ((buttonSize + spacing) * 4.0f), y, buttonSize, buttonSize), PreviewButtonIcon.Last, "Last Frame")) {
+                MovePreviewToLastFrame();
+            }
+        }
+
+        /// <summary>
+        /// プレビュー用の Sprite を描画する
+        /// </summary>
+        /// <param name="rect">描画領域</param>
+        private void DrawPreviewSprite(Rect rect) {
+            if (_clip == null || !_clip.CanPlay) {
+                return;
+            }
+
+            var currentSprite = _clip.GetSprite(_previewTime);
+            if (!TryGetPreviewFlipBookBlend(out var previousSprite, out var fadeProgress)) {
+                if (currentSprite != null) {
+                    DrawSpritePreview(rect, currentSprite, _previewScale);
+                }
+
+                return;
+            }
+
+            if (previousSprite != null) {
+                DrawSpritePreview(rect, previousSprite, _previewScale, 1.0f - fadeProgress);
+            }
+
+            if (currentSprite != null) {
+                DrawSpritePreview(rect, currentSprite, _previewScale, fadeProgress);
+            }
+        }
+
+        /// <summary>
+        /// プレビュー描画用の FlipBookBlend 情報を取得する
+        /// </summary>
+        /// <param name="previousSprite">遷移元Sprite</param>
+        /// <param name="fadeProgress">補間率</param>
+        private bool TryGetPreviewFlipBookBlend(out Sprite previousSprite, out float fadeProgress) {
+            previousSprite = null;
+            fadeProgress = 1.0f;
+
+            if (_clip == null || !_clip.EnableFlipBookBlend || !_clip.CanPlay || _clip.FrameCount <= 1) {
+                return false;
+            }
+
+            var frameDuration = 1.0f / Mathf.Max(0.01f, _clip.FrameRate);
+            var effectiveDuration = Mathf.Min(_clip.FlipBookBlendDuration, Mathf.Max(0.0f, frameDuration - 0.0001f));
+            if (effectiveDuration <= 0.0f) {
+                return false;
+            }
+
+            var currentFrameIndex = _clip.GetFrameIndex(_previewTime);
+            if (currentFrameIndex <= 0 && !_clip.Loop) {
+                return false;
+            }
+
+            if (!_clip.Loop && _previewTime >= _clip.Duration) {
+                return false;
+            }
+
+            var localTime = _clip.Loop ? Mathf.Repeat(_previewTime, frameDuration) : Mathf.Repeat(Mathf.Clamp(_previewTime, 0.0f, _clip.Duration), frameDuration);
+            if (localTime >= effectiveDuration) {
+                return false;
+            }
+
+            var previousFrameIndex = currentFrameIndex > 0 ? currentFrameIndex - 1 : _clip.FrameCount - 1;
+            if (previousFrameIndex < 0 || previousFrameIndex >= _clip.FrameCount) {
+                return false;
+            }
+
+            previousSprite = _clip.Sprites[previousFrameIndex];
+            fadeProgress = Mathf.Clamp01(localTime / effectiveDuration);
+            return true;
+        }
+
+        /// <summary>
+        /// Spriteプレビュー描画
+        /// </summary>
+        private static void DrawSpritePreview(Rect rect, Sprite sprite, float scaleMultiplier) {
+            DrawSpritePreview(rect, sprite, scaleMultiplier, 1.0f);
+        }
+
+        /// <summary>
+        /// Spriteプレビュー描画
+        /// </summary>
+        /// <param name="rect">描画先</param>
+        /// <param name="sprite">描画するSprite</param>
+        /// <param name="scaleMultiplier">表示倍率</param>
+        /// <param name="alpha">描画Alpha</param>
+        private static void DrawSpritePreview(Rect rect, Sprite sprite, float scaleMultiplier, float alpha) {
+            var texture = sprite.texture;
+            if (texture == null) {
+                return;
+            }
+
+            var spriteRect = sprite.rect;
+            var uv = new Rect(
+                spriteRect.x / texture.width,
+                spriteRect.y / texture.height,
+                spriteRect.width / texture.width,
+                spriteRect.height / texture.height);
+
+            var previousColor = GUI.color;
+            var color = previousColor;
+            color.a *= Mathf.Clamp01(alpha);
+            GUI.color = color;
+            GUI.DrawTextureWithTexCoords(GetFitRect(rect, spriteRect.size, scaleMultiplier), texture, uv, true);
+            GUI.color = previousColor;
+        }
+
+        /// <summary>
+        /// 内接矩形を取得
+        /// </summary>
+        private static Rect GetFitRect(Rect rect, Vector2 contentSize, float scaleMultiplier) {
+            if (contentSize.x <= 0.0f || contentSize.y <= 0.0f) {
+                return rect;
+            }
+
+            var safeScale = Mathf.Max(0.01f, scaleMultiplier);
+            var scale = Mathf.Min(rect.width / contentSize.x, rect.height / contentSize.y);
+            var size = contentSize * (scale * safeScale);
+            size.x = Mathf.Min(size.x, rect.width * safeScale);
+            size.y = Mathf.Min(size.y, rect.height * safeScale);
+            return new Rect(rect.center - (size * 0.5f), size);
+        }
+
+        /// <summary>
+        /// ツールバー用アイコンを取得
+        /// </summary>
+        private static Texture GetToolbarIcon(string iconName) {
+            var iconContent = EditorGUIUtility.IconContent(iconName);
+            if (iconContent?.image != null) {
+                return iconContent.image;
+            }
+
+            return EditorGUIUtility.FindTexture(iconName);
+        }
+
+        /// <summary>
+        /// プレビュー用アイコンボタンを描画する
+        /// </summary>
+        private static bool DrawPreviewIconButton(Rect rect, PreviewButtonIcon icon, string tooltip) {
+            var clicked = GUI.Button(rect, new GUIContent(string.Empty, tooltip));
+            var iconRect = new Rect(rect.x + 9.0f, rect.y + 9.0f, rect.width - 18.0f, rect.height - 18.0f);
+            DrawPreviewButtonIcon(iconRect, icon);
+            return clicked;
+        }
+
+        /// <summary>
+        /// プレビュー用アイコンを描画する
+        /// </summary>
+        private static void DrawPreviewButtonIcon(Rect rect, PreviewButtonIcon icon) {
+            var texture = GetPreviewButtonIconTexture(icon);
+            if (texture != null) {
+                GUI.DrawTexture(rect, texture, ScaleMode.ScaleToFit, true);
+                return;
+            }
+
+            var iconColor = EditorGUIUtility.isProSkin
+                ? new Color(0.92f, 0.92f, 0.92f)
+                : new Color(0.15f, 0.15f, 0.15f);
+
+            switch (icon) {
+                case PreviewButtonIcon.First:
+                    DrawFirstIcon(rect, iconColor);
+                    break;
+                case PreviewButtonIcon.Previous:
+                    DrawPreviousIcon(rect, iconColor);
+                    break;
+                case PreviewButtonIcon.Play:
+                    DrawPlayIcon(rect, iconColor);
+                    break;
+                case PreviewButtonIcon.Pause:
+                    DrawPauseIcon(rect, iconColor);
+                    break;
+                case PreviewButtonIcon.Next:
+                    DrawNextIcon(rect, iconColor);
+                    break;
+                case PreviewButtonIcon.Last:
+                    DrawLastIcon(rect, iconColor);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// プレビュー用の高解像度アイコンを取得する
+        /// </summary>
+        private static Texture GetPreviewButtonIconTexture(PreviewButtonIcon icon) {
+            string[] iconNames;
+            switch (icon) {
+                case PreviewButtonIcon.First:
+                    iconNames = new[] { "Animation.FirstKey", "Animation.FirstKey@2x" };
+                    break;
+                case PreviewButtonIcon.Previous:
+                    iconNames = new[] { "Animation.PrevKey", "Animation.PrevKey@2x" };
+                    break;
+                case PreviewButtonIcon.Play:
+                    iconNames = new[] { "d_PlayButton@2x", "PlayButton@2x", "d_PlayButton", "PlayButton" };
+                    break;
+                case PreviewButtonIcon.Pause:
+                    iconNames = new[] { "d_PauseButton@2x", "PauseButton@2x", "d_PauseButton", "PauseButton" };
+                    break;
+                case PreviewButtonIcon.Next:
+                    iconNames = new[] { "Animation.NextKey", "Animation.NextKey@2x" };
+                    break;
+                case PreviewButtonIcon.Last:
+                    iconNames = new[] { "Animation.LastKey", "Animation.LastKey@2x" };
+                    break;
+                default:
+                    iconNames = Array.Empty<string>();
+                    break;
+            }
+
+            for (var i = 0; i < iconNames.Length; i++) {
+                var texture = GetToolbarIcon(iconNames[i]);
+                if (texture != null) {
+                    return texture;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 再生アイコンを描画する
+        /// </summary>
+        private static void DrawPlayIcon(Rect rect, Color color) {
+            Handles.BeginGUI();
+            var previousColor = Handles.color;
+            Handles.color = color;
+            Handles.DrawAAConvexPolygon(
+                new Vector3(rect.xMin, rect.yMin, 0.0f),
+                new Vector3(rect.xMin, rect.yMax, 0.0f),
+                new Vector3(rect.xMax, rect.center.y, 0.0f));
+            Handles.color = previousColor;
+            Handles.EndGUI();
+        }
+
+        /// <summary>
+        /// 先頭移動アイコンを描画する
+        /// </summary>
+        private static void DrawFirstIcon(Rect rect, Color color) {
+            var barWidth = rect.width * 0.12f;
+            EditorGUI.DrawRect(new Rect(rect.xMin, rect.yMin, barWidth, rect.height), color);
+            DrawPreviousIcon(new Rect(rect.xMin + (barWidth * 1.6f), rect.yMin, rect.width - (barWidth * 1.6f), rect.height), color);
+        }
+
+        /// <summary>
+        /// 1つ前移動アイコンを描画する
+        /// </summary>
+        private static void DrawPreviousIcon(Rect rect, Color color) {
+            Handles.BeginGUI();
+            var previousColor = Handles.color;
+            Handles.color = color;
+            Handles.DrawAAConvexPolygon(
+                new Vector3(rect.xMax, rect.yMin, 0.0f),
+                new Vector3(rect.xMax, rect.yMax, 0.0f),
+                new Vector3(rect.xMin, rect.center.y, 0.0f));
+            Handles.color = previousColor;
+            Handles.EndGUI();
+        }
+
+        /// <summary>
+        /// 一時停止アイコンを描画する
+        /// </summary>
+        private static void DrawPauseIcon(Rect rect, Color color) {
+            var barWidth = rect.width * 0.28f;
+            var gap = rect.width * 0.16f;
+            EditorGUI.DrawRect(new Rect(rect.xMin, rect.yMin, barWidth, rect.height), color);
+            EditorGUI.DrawRect(new Rect(rect.xMin + barWidth + gap, rect.yMin, barWidth, rect.height), color);
+        }
+
+        /// <summary>
+        /// 1つ次移動アイコンを描画する
+        /// </summary>
+        private static void DrawNextIcon(Rect rect, Color color) {
+            DrawPlayIcon(rect, color);
+        }
+
+        /// <summary>
+        /// 末尾移動アイコンを描画する
+        /// </summary>
+        private static void DrawLastIcon(Rect rect, Color color) {
+            var barWidth = rect.width * 0.12f;
+            DrawNextIcon(new Rect(rect.xMin, rect.yMin, rect.width - (barWidth * 1.6f), rect.height), color);
+            EditorGUI.DrawRect(new Rect(rect.xMax - barWidth, rect.yMin, barWidth, rect.height), color);
+        }
+
+        /// <summary>
+        /// タイムライン上のフレームプレビュー描画
+        /// </summary>
+        private void DrawTimelineFramePreview(int frameIndex) {
+            var rect = GUILayoutUtility.GetRect(10.0f, 10000.0f, 10.0f, 10000.0f);
+            EditorGUI.DrawRect(rect, new Color(0.14f, 0.14f, 0.14f));
+
+            var sprite = GetFrameSprite(frameIndex);
+            if (sprite == null) {
+                EditorGUI.DropShadowLabel(rect, "Empty");
+                return;
+            }
+
+            DrawSpritePreview(rect, sprite, 1.0f);
+        }
+
+        /// <summary>
+        /// タイムライン用のフレーム名表示文字列を取得する
+        /// </summary>
+        private static string GetTimelineFrameLabelText(Sprite sprite) {
+            if (sprite == null) {
+                return "(empty)";
+            }
+
+            if (sprite.name.Length <= TimelineLabelMaxCharacters) {
+                return sprite.name;
+            }
+
+            return $"{sprite.name[..(TimelineLabelMaxCharacters - 3)]}...";
+        }
+
+        /// <summary>
+        /// プレビュー更新
+        /// </summary>
+        private void RefreshPreview() {
+            if (_previewScaleLabel != null) {
+                _previewScaleLabel.text = $"{_previewScale:0.00}x";
+            }
+
+            _previewContainer?.MarkDirtyRepaint();
+            Repaint();
+        }
+
+        /// <summary>
+        /// 選択フレームへプレビュー位置を同期する
+        /// </summary>
+        private void SyncPreviewToSelectedFrame() {
+            if (_clip == null || !_clip.CanPlay || _selectedFrameIndex < 0) {
+                return;
+            }
+
+            var nextPreviewTime = _selectedFrameIndex / Mathf.Max(0.01f, _clip.FrameRate);
+            if (!_clip.Loop) {
+                nextPreviewTime = Mathf.Clamp(nextPreviewTime, 0.0f, _clip.Duration);
+            }
+
+            SetPreviewTime(nextPreviewTime, syncSelectedFrame: false);
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// プレビュー時間を更新する
+        /// </summary>
+        private void SetPreviewTime(float previewTime, bool syncSelectedFrame) {
+            if (_clip != null) {
+                previewTime = Mathf.Clamp(previewTime, 0.0f, _clip.Duration);
+            }
+
+            _previewTime = previewTime;
+            if (_isPreviewPlaying) {
+                _previewStartTime = EditorApplication.timeSinceStartup - _previewTime;
+            }
+
+            if (syncSelectedFrame) {
+                SyncSelectedFrameToPreview();
+            }
+        }
+
+        /// <summary>
+        /// プレビュー再生位置へ選択フレームを同期する
+        /// </summary>
+        private void SyncSelectedFrameToPreview() {
+            if (_clip == null || !_clip.CanPlay) {
+                return;
+            }
+
+            var previewFrameIndex = _clip.GetFrameIndex(_previewTime);
+            if (previewFrameIndex < 0 || previewFrameIndex == _selectedFrameIndex) {
+                return;
+            }
+
+            _selectedFrameIndex = previewFrameIndex;
+            RefreshInspector();
+            RebuildTimeline();
+        }
+
+        /// <summary>
+        /// 現在のプレビュー時刻を取得
+        /// </summary>
+        private float GetCurrentPreviewTime() {
+            if (_clip == null) {
+                return 0.0f;
+            }
+
+            var elapsed = (float)(EditorApplication.timeSinceStartup - _previewStartTime);
+            if (_clip.Loop && _clip.Duration > 0.0f) {
+                return Mathf.Repeat(elapsed, _clip.Duration);
+            }
+
+            return Mathf.Clamp(elapsed, 0.0f, _clip.Duration);
+        }
+    }
+}
