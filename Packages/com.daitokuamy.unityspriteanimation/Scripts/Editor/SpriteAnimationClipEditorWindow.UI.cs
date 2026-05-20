@@ -78,14 +78,13 @@ namespace UnitySpriteAnimation.Editor {
             previewScaleTitle.style.color = new Color(0.85f, 0.85f, 0.85f);
             previewScaleArea.Add(previewScaleTitle);
 
-            _previewScaleSlider = new Slider(0.1f, 1.0f) {
+            _previewScaleSlider = new Slider(PreviewScaleMin, PreviewScaleMax) {
                 value = _previewScale,
             };
             _previewScaleSlider.style.width = 140.0f;
             _previewScaleSlider.style.marginRight = 6.0f;
             _previewScaleSlider.RegisterValueChangedCallback(evt => {
-                _previewScale = evt.newValue;
-                RefreshPreview();
+                SetPreviewScale(evt.newValue);
             });
             previewScaleArea.Add(_previewScaleSlider);
 
@@ -93,6 +92,46 @@ namespace UnitySpriteAnimation.Editor {
             _previewScaleLabel.style.minWidth = 42.0f;
             _previewScaleLabel.style.color = new Color(0.90f, 0.90f, 0.90f);
             previewScaleArea.Add(_previewScaleLabel);
+
+            var previewSeekTitle = new Label("Seek");
+            previewSeekTitle.style.marginLeft = 16.0f;
+            previewSeekTitle.style.marginRight = 6.0f;
+            previewSeekTitle.style.color = new Color(0.85f, 0.85f, 0.85f);
+            previewScaleArea.Add(previewSeekTitle);
+
+            _previewSeekSlider = new Slider(0.0f, 1.0f) {
+                value = GetPreviewSeekValue(),
+            };
+            _previewSeekSlider.style.width = 180.0f;
+            _previewSeekSlider.style.marginRight = 6.0f;
+            _previewSeekSlider.RegisterValueChangedCallback(evt => {
+                SetPreviewSeek(evt.newValue);
+            });
+            previewScaleArea.Add(_previewSeekSlider);
+
+            _previewSeekLabel = new Label("0%");
+            _previewSeekLabel.style.minWidth = 36.0f;
+            _previewSeekLabel.style.color = new Color(0.90f, 0.90f, 0.90f);
+            previewScaleArea.Add(_previewSeekLabel);
+
+            var previewBackgroundTitle = new Label("BG");
+            previewBackgroundTitle.style.marginLeft = 16.0f;
+            previewBackgroundTitle.style.marginRight = 6.0f;
+            previewBackgroundTitle.style.color = new Color(0.85f, 0.85f, 0.85f);
+            previewScaleArea.Add(previewBackgroundTitle);
+
+            _previewBackgroundColorField = new ColorField("Background");
+            _previewBackgroundColorField.label = string.Empty;
+            _previewBackgroundColorField.showAlpha = false;
+            _previewBackgroundColorField.value = _previewBackgroundColor;
+            _previewBackgroundColorField.style.width = 76.0f;
+            _previewBackgroundColorField.RegisterValueChangedCallback(evt => {
+                var nextColor = evt.newValue;
+                nextColor.a = 1.0f;
+                _previewBackgroundColor = nextColor;
+                RefreshPreview();
+            });
+            previewScaleArea.Add(_previewBackgroundColorField);
 
             previewHeader.Add(previewScaleArea);
             previewPanel.Add(previewHeader);
@@ -488,14 +527,7 @@ namespace UnitySpriteAnimation.Editor {
                     return;
                 }
 
-                _selectedFrameIndex = frameIndex;
-                _dragFrameIndex = frameIndex;
-                _dragInsertIndex = frameIndex;
-                _isDraggingFrame = true;
-                rootVisualElement.Focus();
-                SyncPreviewToSelectedFrame();
-                RefreshInspector();
-                RebuildTimeline();
+                BeginTimelineFramePointerDown(frameIndex, evt.mousePosition);
                 evt.StopPropagation();
             });
 

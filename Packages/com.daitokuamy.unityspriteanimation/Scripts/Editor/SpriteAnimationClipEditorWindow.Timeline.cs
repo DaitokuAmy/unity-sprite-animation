@@ -134,15 +134,16 @@ namespace UnitySpriteAnimation.Editor {
         /// <summary>
         /// フレーム順を変更する
         /// </summary>
-        private void MoveFrame(int fromFrameIndex, int insertIndex) {
+        /// <returns>移動した場合 true</returns>
+        private bool MoveFrame(int fromFrameIndex, int insertIndex) {
             if (!CanEditClipFrames() || fromFrameIndex < 0 || fromFrameIndex >= _spritesProperty.arraySize) {
-                return;
+                return false;
             }
 
             insertIndex = Mathf.Clamp(insertIndex, 0, _spritesProperty.arraySize);
             var destinationIndex = fromFrameIndex < insertIndex ? insertIndex - 1 : insertIndex;
             if (destinationIndex == fromFrameIndex) {
-                return;
+                return false;
             }
 
             BeginClipEdit("Reorder Sprite Animation Frame", true);
@@ -165,6 +166,7 @@ namespace UnitySpriteAnimation.Editor {
             _selectedFrameIndex = destinationIndex;
             ResetTimelineDragState();
             RefreshClipViews();
+            return true;
         }
 
         /// <summary>
@@ -308,9 +310,58 @@ namespace UnitySpriteAnimation.Editor {
         }
 
         /// <summary>
+        /// Timeline フレームの左クリック開始時処理
+        /// </summary>
+        /// <param name="frameIndex">対象フレーム</param>
+        /// <param name="mousePosition">マウス位置</param>
+        private void BeginTimelineFramePointerDown(int frameIndex, Vector2 mousePosition) {
+            _selectedFrameIndex = frameIndex;
+            _pendingDragFrameIndex = frameIndex;
+            _pendingDragMousePosition = mousePosition;
+            _dragFrameIndex = -1;
+            _dragInsertIndex = -1;
+            _isFrameDragPending = true;
+            _isDraggingFrame = false;
+
+            rootVisualElement.CaptureMouse();
+            rootVisualElement.Focus();
+            SyncPreviewToSelectedFrame();
+            RefreshInspector();
+            RebuildTimeline();
+        }
+
+        /// <summary>
+        /// 保留中の Timeline フレームドラッグを開始する
+        /// </summary>
+        /// <param name="mousePosition">マウス位置</param>
+        private void StartPendingTimelineFrameDrag(Vector2 mousePosition) {
+            if (!_isFrameDragPending || _pendingDragFrameIndex < 0 || _timelineContent == null || _clip == null) {
+                return;
+            }
+
+            var localPosition = _timelineContent.WorldToLocal(mousePosition);
+            _dragFrameIndex = _pendingDragFrameIndex;
+            _dragInsertIndex = GetFrameInsertIndexFromTimelinePosition(localPosition.x);
+            _pendingDragFrameIndex = -1;
+            _isFrameDragPending = false;
+            _isDraggingFrame = true;
+            RebuildTimeline();
+        }
+
+        /// <summary>
         /// ルートのマウス移動時処理
         /// </summary>
         private void OnRootMouseMove(MouseMoveEvent evt) {
+            if (_isFrameDragPending) {
+                if (Vector2.Distance(_pendingDragMousePosition, evt.mousePosition) < TimelineDragStartDistance) {
+                    return;
+                }
+
+                StartPendingTimelineFrameDrag(evt.mousePosition);
+                evt.StopPropagation();
+                return;
+            }
+
             if (!_isDraggingFrame || _timelineContent == null || _clip == null) {
                 return;
             }
@@ -324,7 +375,17 @@ namespace UnitySpriteAnimation.Editor {
         /// ルートのマウス解放時処理
         /// </summary>
         private void OnRootMouseUp(MouseUpEvent evt) {
-            if (evt.button != 0 || !_isDraggingFrame) {
+            if (evt.button != 0) {
+                return;
+            }
+
+            if (_isFrameDragPending) {
+                ResetTimelineDragState();
+                evt.StopPropagation();
+                return;
+            }
+
+            if (!_isDraggingFrame) {
                 return;
             }
 
@@ -333,10 +394,7 @@ namespace UnitySpriteAnimation.Editor {
 
             ResetTimelineDragState();
 
-            if (fromFrameIndex >= 0 && insertIndex >= 0) {
-                MoveFrame(fromFrameIndex, insertIndex);
-            }
-            else {
+            if (fromFrameIndex < 0 || insertIndex < 0 || !MoveFrame(fromFrameIndex, insertIndex)) {
                 RebuildTimeline();
             }
 

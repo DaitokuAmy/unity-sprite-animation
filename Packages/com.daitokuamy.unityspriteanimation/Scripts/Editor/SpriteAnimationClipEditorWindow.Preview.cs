@@ -10,6 +10,15 @@ namespace UnitySpriteAnimation.Editor {
     public sealed partial class SpriteAnimationClipEditorWindow {
         private const string PreviewShaderName = "Unity Sprite Animation/UI Default";
         private const int PreviewShaderPassIndex = 0;
+        private const bool EnablePreviewFlipBookBlendSimulation = false;
+
+        private static readonly int ColorPropertyId = Shader.PropertyToID("_Color");
+        private static readonly int MainTexPropertyId = Shader.PropertyToID("_MainTex");
+        private static readonly int PrevTexPropertyId = Shader.PropertyToID("_PrevTex");
+        private static readonly int CurrentTexUVRectPropertyId = Shader.PropertyToID("_CurrentTexUVRect");
+        private static readonly int PrevTexUVRectPropertyId = Shader.PropertyToID("_PrevTexUVRect");
+        private static readonly int FlipBookBlendParamsPropertyId = Shader.PropertyToID("_FlipBookBlendParams");
+        private static readonly Vector4 DefaultPreviewUVRect = new(0.0f, 0.0f, 1.0f, 1.0f);
 
         private Material _previewMaterial;
 
@@ -35,8 +44,10 @@ namespace UnitySpriteAnimation.Editor {
 
             _isPreviewPlaying = true;
             _isPreviewPaused = false;
-            SetPreviewTime(0.0f, syncSelectedFrame: true);
-            _previewStartTime = EditorApplication.timeSinceStartup;
+            var startTime = !_clip.Loop && _previewTime >= _clip.Duration ? 0.0f : _previewTime;
+            SetPreviewTime(startTime, syncSelectedFrame: true);
+            ResetPreviewFlipBookBlendState(_clip.GetFrameIndex(_previewTime));
+            _previewStartTime = EditorApplication.timeSinceStartup - _previewTime;
             RefreshPreview();
         }
 
@@ -51,6 +62,7 @@ namespace UnitySpriteAnimation.Editor {
             _isPreviewPlaying = false;
             _isPreviewPaused = true;
             SetPreviewTime(GetCurrentPreviewTime(), syncSelectedFrame: true);
+            ResetPreviewFlipBookBlendState(_clip != null ? _clip.GetFrameIndex(_previewTime) : -1);
             RefreshPreview();
         }
 
@@ -61,6 +73,7 @@ namespace UnitySpriteAnimation.Editor {
             _isPreviewPlaying = false;
             _isPreviewPaused = false;
             SetPreviewTime(0.0f, syncSelectedFrame: true);
+            ResetPreviewFlipBookBlendState(_clip != null ? _clip.GetFrameIndex(_previewTime) : -1);
             RefreshPreview();
         }
 
@@ -75,6 +88,7 @@ namespace UnitySpriteAnimation.Editor {
             _isPreviewPlaying = false;
             _isPreviewPaused = false;
             SetPreviewTime(0.0f, syncSelectedFrame: true);
+            ResetPreviewFlipBookBlendState(_clip.GetFrameIndex(_previewTime));
             RefreshPreview();
         }
 
@@ -104,6 +118,7 @@ namespace UnitySpriteAnimation.Editor {
             _isPreviewPaused = false;
             var lastFrameIndex = Mathf.Max(0, _clip.FrameCount - 1);
             SetPreviewTime(lastFrameIndex / Mathf.Max(0.01f, _clip.FrameRate), syncSelectedFrame: true);
+            ResetPreviewFlipBookBlendState(_clip.GetFrameIndex(_previewTime));
             RefreshPreview();
         }
 
@@ -122,6 +137,7 @@ namespace UnitySpriteAnimation.Editor {
             var currentFrameIndex = Mathf.Max(0, _clip.GetFrameIndex(_previewTime));
             var nextFrameIndex = Mathf.Clamp(currentFrameIndex + offset, 0, Mathf.Max(0, _clip.FrameCount - 1));
             SetPreviewTime(nextFrameIndex / Mathf.Max(0.01f, _clip.FrameRate), syncSelectedFrame: true);
+            ResetPreviewFlipBookBlendState(_clip.GetFrameIndex(_previewTime));
             RefreshPreview();
         }
 
@@ -137,6 +153,7 @@ namespace UnitySpriteAnimation.Editor {
             if (_isPreviewPaused && _clip != null && _clip.CanPlay) {
                 _isPreviewPlaying = true;
                 _isPreviewPaused = false;
+                ResetPreviewFlipBookBlendState(_clip.GetFrameIndex(_previewTime));
                 _previewStartTime = EditorApplication.timeSinceStartup - _previewTime;
                 RefreshPreview();
                 return;
@@ -153,11 +170,14 @@ namespace UnitySpriteAnimation.Editor {
                 return;
             }
 
+            var previousFrameIndex = _previewPlaybackFrameIndex;
             SetPreviewTime(GetCurrentPreviewTime(), syncSelectedFrame: false);
+            UpdatePreviewFlipBookBlendState(previousFrameIndex);
             if (!_clip.Loop && _previewTime >= _clip.Duration) {
                 _isPreviewPlaying = false;
                 _isPreviewPaused = false;
                 SetPreviewTime(_clip.Duration, syncSelectedFrame: true);
+                ResetPreviewFlipBookBlendState(_clip.GetFrameIndex(_previewTime));
             }
 
             SyncSelectedFrameToPreview();
@@ -180,8 +200,9 @@ namespace UnitySpriteAnimation.Editor {
         /// </summary>
         private void DrawPreviewGui() {
             var rect = GUILayoutUtility.GetRect(10.0f, 10000.0f, 10.0f, 10000.0f);
-            EditorGUI.DrawRect(rect, new Color(0.10f, 0.10f, 0.10f));
+            EditorGUI.DrawRect(rect, _previewBackgroundColor);
             var contentRect = new Rect(rect.x, rect.y, rect.width, Mathf.Max(0.0f, rect.height - PreviewBottomPadding));
+            HandlePreviewScaleScrollWheel(contentRect);
 
             if (_clip == null) {
                 EditorGUI.DropShadowLabel(contentRect, "SpriteAnimationClip を選択してください");
@@ -265,7 +286,7 @@ namespace UnitySpriteAnimation.Editor {
             previousSprite = null;
             fadeProgress = 1.0f;
 
-            if (_clip == null || !_clip.EnableFlipBookBlend || !_clip.CanPlay || _clip.FrameCount <= 1) {
+            if (!EnablePreviewFlipBookBlendSimulation || !_isPreviewPlaying || _clip == null || !_clip.EnableFlipBookBlend || !_clip.CanPlay || _clip.FrameCount <= 1) {
                 return false;
             }
 
@@ -276,6 +297,10 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             var currentFrameIndex = _clip.GetFrameIndex(_previewTime);
+            if (currentFrameIndex != _previewBlendFrameIndex) {
+                return false;
+            }
+
             if (currentFrameIndex <= 0 && !_clip.Loop) {
                 return false;
             }
@@ -286,6 +311,7 @@ namespace UnitySpriteAnimation.Editor {
 
             var localTime = _clip.Loop ? Mathf.Repeat(_previewTime, frameDuration) : Mathf.Repeat(Mathf.Clamp(_previewTime, 0.0f, _clip.Duration), frameDuration);
             if (localTime >= effectiveDuration) {
+                _previewBlendFrameIndex = -1;
                 return false;
             }
 
@@ -297,6 +323,34 @@ namespace UnitySpriteAnimation.Editor {
             previousSprite = _clip.Sprites[previousFrameIndex];
             fadeProgress = Mathf.Clamp01(localTime / effectiveDuration);
             return true;
+        }
+
+        /// <summary>
+        /// Preview の FlipBookBlend 状態を初期化する
+        /// </summary>
+        /// <param name="currentFrameIndex">現在フレーム</param>
+        private void ResetPreviewFlipBookBlendState(int currentFrameIndex) {
+            _previewPlaybackFrameIndex = currentFrameIndex;
+            _previewBlendFrameIndex = -1;
+        }
+
+        /// <summary>
+        /// Preview 再生中の FlipBookBlend 状態を更新する
+        /// </summary>
+        /// <param name="previousFrameIndex">前回フレーム</param>
+        private void UpdatePreviewFlipBookBlendState(int previousFrameIndex) {
+            if (_clip == null || !_clip.CanPlay) {
+                ResetPreviewFlipBookBlendState(-1);
+                return;
+            }
+
+            var currentFrameIndex = _clip.GetFrameIndex(_previewTime);
+            if (currentFrameIndex == previousFrameIndex) {
+                return;
+            }
+
+            _previewPlaybackFrameIndex = currentFrameIndex;
+            _previewBlendFrameIndex = previousFrameIndex >= 0 ? currentFrameIndex : -1;
         }
 
         /// <summary>
@@ -320,11 +374,8 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             var spriteRect = sprite.rect;
-            var uv = new Rect(
-                spriteRect.x / texture.width,
-                spriteRect.y / texture.height,
-                spriteRect.width / texture.width,
-                spriteRect.height / texture.height);
+            var uvRect = GetSpritePreviewUVRect(sprite);
+            var uv = new Rect(uvRect.x, uvRect.y, uvRect.z, uvRect.w);
 
             var previousColor = GUI.color;
             var color = previousColor;
@@ -346,14 +397,61 @@ namespace UnitySpriteAnimation.Editor {
                 return;
             }
 
-            _previewMaterial.SetColor("_Color", Color.white);
-            _previewMaterial.SetTexture("_MainTex", currentSprite.texture);
-            MaterialUtility.ApplyProperties(_previewMaterial, currentSprite, previousSprite, fadeProgress);
+            _previewMaterial.SetColor(ColorPropertyId, Color.white);
+            _previewMaterial.SetTexture(MainTexPropertyId, currentSprite.texture);
+            ApplyPreviewFlipBookBlendProperties(_previewMaterial, currentSprite, previousSprite, fadeProgress);
 
-            var uvRect = MaterialUtility.GetSpriteUVRect(currentSprite);
+            var uvRect = GetSpritePreviewUVRect(currentSprite);
             var sourceRect = new Rect(uvRect.x, uvRect.y, uvRect.z, uvRect.w);
             var drawRect = GetFitRect(rect, currentSprite.rect.size, _previewScale);
             Graphics.DrawTexture(drawRect, currentSprite.texture, sourceRect, 0, 0, 0, 0, Color.white, _previewMaterial, PreviewShaderPassIndex);
+        }
+
+        /// <summary>
+        /// プレビュー描画用の Sprite UV rect を取得する
+        /// </summary>
+        /// <param name="sprite">対象 Sprite</param>
+        /// <returns>UV rect</returns>
+        private static Vector4 GetSpritePreviewUVRect(Sprite sprite) {
+            if (sprite == null) {
+                return DefaultPreviewUVRect;
+            }
+
+            var texture = sprite.texture;
+            if (texture == null || texture.width <= 0 || texture.height <= 0) {
+                return DefaultPreviewUVRect;
+            }
+
+            var spriteRect = sprite.rect;
+            return new Vector4(
+                spriteRect.x / texture.width,
+                spriteRect.y / texture.height,
+                Mathf.Max(0.0f, spriteRect.width / texture.width),
+                Mathf.Max(0.0f, spriteRect.height / texture.height));
+        }
+
+        /// <summary>
+        /// プレビュー用 Material へ FlipBookBlend property を適用する
+        /// </summary>
+        /// <param name="material">更新対象 Material</param>
+        /// <param name="currentSprite">現在 Sprite</param>
+        /// <param name="previousSprite">遷移元 Sprite</param>
+        /// <param name="fadeProgress">補間率</param>
+        private static void ApplyPreviewFlipBookBlendProperties(Material material, Sprite currentSprite, Sprite previousSprite, float fadeProgress) {
+            if (material == null) {
+                return;
+            }
+
+            var previousTexture = previousSprite != null && previousSprite.texture != null
+                ? previousSprite.texture
+                : Texture2D.blackTexture;
+
+            material.SetTexture(PrevTexPropertyId, previousTexture);
+            material.SetVector(CurrentTexUVRectPropertyId, GetSpritePreviewUVRect(currentSprite));
+            material.SetVector(PrevTexUVRectPropertyId, GetSpritePreviewUVRect(previousSprite));
+            material.SetVector(
+                FlipBookBlendParamsPropertyId,
+                new Vector4(previousSprite != null && currentSprite != null ? 1.0f : 0.0f, Mathf.Clamp01(fadeProgress), 0.0f, 0.0f));
         }
 
         /// <summary>
@@ -634,8 +732,94 @@ namespace UnitySpriteAnimation.Editor {
                 _previewScaleLabel.text = $"{_previewScale:0.00}x";
             }
 
+            if (_previewScaleSlider != null) {
+                _previewScaleSlider.SetValueWithoutNotify(_previewScale);
+            }
+
+            var seekValue = GetPreviewSeekValue();
+            if (_previewSeekSlider != null) {
+                _previewSeekSlider.SetValueWithoutNotify(seekValue);
+                _previewSeekSlider.SetEnabled(_clip != null && _clip.CanPlay && _clip.Duration > 0.0f);
+            }
+
+            if (_previewSeekLabel != null) {
+                _previewSeekLabel.text = $"{seekValue * 100.0f:0}%";
+            }
+
+            if (_previewBackgroundColorField != null) {
+                _previewBackgroundColorField.SetValueWithoutNotify(_previewBackgroundColor);
+            }
+
             _previewContainer?.MarkDirtyRepaint();
             Repaint();
+        }
+
+        /// <summary>
+        /// プレビュー拡大率を設定する
+        /// </summary>
+        /// <param name="scale">拡大率</param>
+        private void SetPreviewScale(float scale) {
+            _previewScale = Mathf.Clamp(scale, PreviewScaleMin, PreviewScaleMax);
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// プレビュー再生位置を割合で設定する
+        /// </summary>
+        /// <param name="seekValue">0.0-1.0 の再生位置</param>
+        private void SetPreviewSeek(float seekValue) {
+            if (_clip == null || !_clip.CanPlay || _clip.Duration <= 0.0f) {
+                SetPreviewTime(0.0f, syncSelectedFrame: true);
+                ResetPreviewFlipBookBlendState(-1);
+                RefreshPreview();
+                return;
+            }
+
+            SetPreviewTime(GetPreviewTimeFromSeekValue(seekValue), syncSelectedFrame: true);
+            ResetPreviewFlipBookBlendState(_clip.GetFrameIndex(_previewTime));
+            RefreshPreview();
+        }
+
+        /// <summary>
+        /// 現在のプレビュー再生位置を割合で取得する
+        /// </summary>
+        private float GetPreviewSeekValue() {
+            if (_clip == null || !_clip.CanPlay || _clip.Duration <= 0.0f) {
+                return 0.0f;
+            }
+
+            return Mathf.Clamp01(_previewTime / _clip.Duration);
+        }
+
+        /// <summary>
+        /// 割合からプレビュー時刻を取得する
+        /// </summary>
+        /// <param name="seekValue">0.0-1.0 の再生位置</param>
+        private float GetPreviewTimeFromSeekValue(float seekValue) {
+            if (_clip == null || !_clip.CanPlay || _clip.Duration <= 0.0f) {
+                return 0.0f;
+            }
+
+            var normalizedSeekValue = Mathf.Clamp01(seekValue);
+            if (_clip.Loop && normalizedSeekValue >= 1.0f) {
+                return Mathf.Max(0.0f, _clip.Duration - 0.0001f);
+            }
+
+            return normalizedSeekValue * _clip.Duration;
+        }
+
+        /// <summary>
+        /// プレビュー領域のホイール操作で拡大率を更新する
+        /// </summary>
+        /// <param name="rect">操作対象領域</param>
+        private void HandlePreviewScaleScrollWheel(Rect rect) {
+            var evt = Event.current;
+            if (evt == null || evt.type != EventType.ScrollWheel || !rect.Contains(evt.mousePosition)) {
+                return;
+            }
+
+            SetPreviewScale(_previewScale - (evt.delta.y * PreviewScaleWheelStep));
+            evt.Use();
         }
 
         /// <summary>
@@ -652,6 +836,7 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             SetPreviewTime(nextPreviewTime, syncSelectedFrame: false);
+            ResetPreviewFlipBookBlendState(_clip.GetFrameIndex(_previewTime));
             RefreshPreview();
         }
 

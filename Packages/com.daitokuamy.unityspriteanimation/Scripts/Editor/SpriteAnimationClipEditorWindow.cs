@@ -31,10 +31,23 @@ namespace UnitySpriteAnimation.Editor {
         /// <summary>プレビュー下部の操作ボタン分の余白</summary>
         private const float PreviewBottomPadding = 56.0f;
 
+        /// <summary>プレビュー拡大率の最小値</summary>
+        private const float PreviewScaleMin = 0.1f;
+
+        /// <summary>プレビュー拡大率の最大値</summary>
+        private const float PreviewScaleMax = 1.0f;
+
+        /// <summary>マウスホイール1単位あたりのプレビュー拡大率変化量</summary>
+        private const float PreviewScaleWheelStep = 0.05f;
+
+        /// <summary>Timeline フレームドラッグ開始距離</summary>
+        private const float TimelineDragStartDistance = 4.0f;
+
         [SerializeField] private SpriteAnimationClip _clip;
         [SerializeField] private int _selectedFrameIndex = -1;
         [SerializeField] private bool _hasCopiedFrame;
         [SerializeField] private Sprite _copiedFrameSprite;
+        [SerializeField] private Color _previewBackgroundColor = new(0.10f, 0.10f, 0.10f, 1.0f);
 
         private readonly List<VisualElement> _frameElements = new();
         private SerializedObject _serializedClip;
@@ -67,13 +80,21 @@ namespace UnitySpriteAnimation.Editor {
         private FloatField _timelineFrameRateField;
         private Slider _previewScaleSlider;
         private Label _previewScaleLabel;
+        private Slider _previewSeekSlider;
+        private Label _previewSeekLabel;
+        private ColorField _previewBackgroundColorField;
+        private int _pendingDragFrameIndex = -1;
+        private Vector2 _pendingDragMousePosition;
         private int _dragFrameIndex = -1;
         private int _dragInsertIndex = -1;
+        private bool _isFrameDragPending;
         private bool _isDraggingFrame;
         private bool _isPreviewPlaying;
         private bool _isPreviewPaused;
         private float _previewTime;
         private double _previewStartTime;
+        private int _previewPlaybackFrameIndex = -1;
+        private int _previewBlendFrameIndex = -1;
         private float _previewScale = 1.0f;
 
         /// <summary>
@@ -204,6 +225,7 @@ namespace UnitySpriteAnimation.Editor {
             _flipBookBlendDurationProperty = _serializedClip?.FindProperty("_flipBookBlendDuration");
             _spritesProperty = _serializedClip?.FindProperty("_sprites");
             _selectedFrameIndex = _clip != null && _clip.FrameCount > 0 ? Mathf.Clamp(_selectedFrameIndex, 0, _clip.FrameCount - 1) : -1;
+            ResetPreviewFlipBookBlendState(_clip != null ? _clip.GetFrameIndex(_previewTime) : -1);
 
             if (_clipField != null && _clipField.value != _clip) {
                 _clipField.SetValueWithoutNotify(_clip);
@@ -227,9 +249,15 @@ namespace UnitySpriteAnimation.Editor {
         /// タイムラインのドラッグ状態をリセットする
         /// </summary>
         private void ResetTimelineDragState() {
+            _pendingDragFrameIndex = -1;
+            _pendingDragMousePosition = Vector2.zero;
             _dragFrameIndex = -1;
             _dragInsertIndex = -1;
+            _isFrameDragPending = false;
             _isDraggingFrame = false;
+            if (rootVisualElement?.panel != null && rootVisualElement.HasMouseCapture()) {
+                rootVisualElement.ReleaseMouse();
+            }
         }
 
         /// <summary>
