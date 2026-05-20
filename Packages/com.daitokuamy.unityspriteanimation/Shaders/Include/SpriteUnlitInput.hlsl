@@ -63,9 +63,13 @@ half4 BlendFlipBookSprite(half4 previousSprite, half4 currentSprite) {
         return currentSprite;
     }
 
-    half4 blendedSprite = lerp(previousSprite, currentSprite, blendProgress);
-    blendedSprite.a = max(previousSprite.a, currentSprite.a);
-    return blendedSprite;
+    half previousWeight = previousSprite.a * (1.0h - blendProgress);
+    half currentWeight = currentSprite.a * blendProgress;
+    half blendedAlpha = previousWeight + currentWeight;
+
+    half3 blendedRgb = (previousSprite.rgb * previousWeight + currentSprite.rgb * currentWeight) /
+        max(blendedAlpha, 0.0001h);
+    return half4(blendedRgb, blendedAlpha);
 }
 
 #endif
