@@ -10,15 +10,20 @@ namespace UnitySpriteAnimation.Editor {
     public sealed partial class SpriteAnimationClipEditorWindow {
         private const string PreviewShaderName = "Unity Sprite Animation/UI Default";
         private const int PreviewShaderPassIndex = 0;
+        private const int SpriteMeshPreviewMaxTextureSize = 2048;
         private const bool EnablePreviewFlipBookBlendSimulation = false;
 
         private static readonly int ColorPropertyId = Shader.PropertyToID("_Color");
         private static readonly int MainTexPropertyId = Shader.PropertyToID("_MainTex");
+        private static readonly int BlendOpPropertyId = Shader.PropertyToID("_BlendOp");
+        private static readonly int SrcBlendPropertyId = Shader.PropertyToID("_SrcBlend");
+        private static readonly int DstBlendPropertyId = Shader.PropertyToID("_DstBlend");
+        private static readonly int SrcBlendAlphaPropertyId = Shader.PropertyToID("_SrcBlendAlpha");
+        private static readonly int DstBlendAlphaPropertyId = Shader.PropertyToID("_DstBlendAlpha");
         private static readonly int PrevTexPropertyId = Shader.PropertyToID("_PrevTex");
         private static readonly int CurrentTexUVRectPropertyId = Shader.PropertyToID("_CurrentTexUVRect");
         private static readonly int PrevTexUVRectPropertyId = Shader.PropertyToID("_PrevTexUVRect");
         private static readonly int FlipBookBlendParamsPropertyId = Shader.PropertyToID("_FlipBookBlendParams");
-        private static readonly Vector4 DefaultPreviewUVRect = new(0.0f, 0.0f, 1.0f, 1.0f);
 
         private Material _previewMaterial;
 
@@ -356,7 +361,7 @@ namespace UnitySpriteAnimation.Editor {
         /// <summary>
         /// Spriteプレビュー描画
         /// </summary>
-        private static void DrawSpritePreview(Rect rect, Sprite sprite, float scaleMultiplier) {
+        private void DrawSpritePreview(Rect rect, Sprite sprite, float scaleMultiplier) {
             DrawSpritePreview(rect, sprite, scaleMultiplier, 1.0f);
         }
 
@@ -367,13 +372,23 @@ namespace UnitySpriteAnimation.Editor {
         /// <param name="sprite">描画するSprite</param>
         /// <param name="scaleMultiplier">表示倍率</param>
         /// <param name="alpha">描画Alpha</param>
-        private static void DrawSpritePreview(Rect rect, Sprite sprite, float scaleMultiplier, float alpha) {
+        private void DrawSpritePreview(Rect rect, Sprite sprite, float scaleMultiplier, float alpha) {
             var texture = sprite.texture;
             if (texture == null) {
                 return;
             }
 
             var spriteRect = sprite.rect;
+            var drawRect = GetFitRect(rect, spriteRect.size, scaleMultiplier);
+            if (EnsurePreviewMaterial()) {
+                _previewMaterial.SetColor(ColorPropertyId, new Color(1.0f, 1.0f, 1.0f, Mathf.Clamp01(alpha)));
+                _previewMaterial.SetTexture(MainTexPropertyId, texture);
+                MaterialUtility.ResetProperties(_previewMaterial, sprite);
+                if (TryDrawSpriteMeshPreview(drawRect, sprite, _previewMaterial)) {
+                    return;
+                }
+            }
+
             var uvRect = GetSpritePreviewUVRect(sprite);
             var uv = new Rect(uvRect.x, uvRect.y, uvRect.z, uvRect.w);
 
@@ -381,7 +396,7 @@ namespace UnitySpriteAnimation.Editor {
             var color = previousColor;
             color.a *= Mathf.Clamp01(alpha);
             GUI.color = color;
-            GUI.DrawTextureWithTexCoords(GetFitRect(rect, spriteRect.size, scaleMultiplier), texture, uv, true);
+            GUI.DrawTextureWithTexCoords(drawRect, texture, uv, true);
             GUI.color = previousColor;
         }
 
@@ -404,6 +419,10 @@ namespace UnitySpriteAnimation.Editor {
             var uvRect = GetSpritePreviewUVRect(currentSprite);
             var sourceRect = new Rect(uvRect.x, uvRect.y, uvRect.z, uvRect.w);
             var drawRect = GetFitRect(rect, currentSprite.rect.size, _previewScale);
+            if (TryDrawSpriteMeshPreview(drawRect, currentSprite, _previewMaterial)) {
+                return;
+            }
+
             Graphics.DrawTexture(drawRect, currentSprite.texture, sourceRect, 0, 0, 0, 0, Color.white, _previewMaterial, PreviewShaderPassIndex);
         }
 
@@ -413,21 +432,166 @@ namespace UnitySpriteAnimation.Editor {
         /// <param name="sprite">対象 Sprite</param>
         /// <returns>UV rect</returns>
         private static Vector4 GetSpritePreviewUVRect(Sprite sprite) {
-            if (sprite == null) {
-                return DefaultPreviewUVRect;
+            return MaterialUtility.GetSpriteUVRect(sprite);
+        }
+
+        /// <summary>
+        /// SpriteMesh を RenderTexture に描画してから GUI に貼り付ける
+        /// </summary>
+        /// <param name="drawRect">描画先</param>
+        /// <param name="sprite">描画する Sprite</param>
+        /// <param name="material">描画に使う Material</param>
+        /// <returns>描画できた場合 true</returns>
+        private static bool TryDrawSpriteMeshPreview(Rect drawRect, Sprite sprite, Material material) {
+            if (Event.current.type != EventType.Repaint ||
+                sprite == null ||
+                material == null ||
+                drawRect.width <= 0.0f ||
+                drawRect.height <= 0.0f) {
+                return false;
             }
 
-            var texture = sprite.texture;
-            if (texture == null || texture.width <= 0 || texture.height <= 0) {
-                return DefaultPreviewUVRect;
+            var vertices = sprite.vertices;
+            var triangles = sprite.triangles;
+            var uv = sprite.uv;
+            if (!CanDrawSpriteMesh(vertices, triangles, uv)) {
+                return false;
             }
 
+            var textureWidth = Mathf.Clamp(Mathf.CeilToInt(drawRect.width), 1, SpriteMeshPreviewMaxTextureSize);
+            var textureHeight = Mathf.Clamp(Mathf.CeilToInt(drawRect.height), 1, SpriteMeshPreviewMaxTextureSize);
+            var previewTexture = RenderTexture.GetTemporary(textureWidth, textureHeight, 0, RenderTextureFormat.ARGB32);
+
+            try {
+                var previousRenderTexture = RenderTexture.active;
+                var didBegin = false;
+                var didPushMatrix = false;
+                var didRender = false;
+                var previousBlendOp = material.GetFloat(BlendOpPropertyId);
+                var previousSrcBlend = material.GetFloat(SrcBlendPropertyId);
+                var previousDstBlend = material.GetFloat(DstBlendPropertyId);
+                var previousSrcBlendAlpha = material.GetFloat(SrcBlendAlphaPropertyId);
+                var previousDstBlendAlpha = material.GetFloat(DstBlendAlphaPropertyId);
+
+                try {
+                    RenderTexture.active = previewTexture;
+                    GL.PushMatrix();
+                    didPushMatrix = true;
+                    GL.Clear(true, true, Color.clear);
+                    GL.LoadPixelMatrix(0.0f, textureWidth, 0.0f, textureHeight);
+                    SetPreviewRenderTextureBlend(material);
+
+                    if (material.SetPass(PreviewShaderPassIndex)) {
+                        GL.Begin(GL.TRIANGLES);
+                        didBegin = true;
+                        GL.Color(Color.white);
+                        for (var i = 0; i < triangles.Length; i++) {
+                            var vertexIndex = triangles[i];
+                            var position = GetSpriteMeshPreviewPosition(sprite, vertices[vertexIndex], new Vector2(textureWidth, textureHeight));
+                            var textureCoord = uv[vertexIndex];
+                            GL.TexCoord2(textureCoord.x, textureCoord.y);
+                            GL.Vertex3(position.x, position.y, 0.0f);
+                        }
+
+                        didRender = true;
+                    }
+                }
+                finally {
+                    if (didBegin) {
+                        GL.End();
+                    }
+
+                    if (didPushMatrix) {
+                        GL.PopMatrix();
+                    }
+
+                    RestorePreviewBlend(
+                        material,
+                        previousBlendOp,
+                        previousSrcBlend,
+                        previousDstBlend,
+                        previousSrcBlendAlpha,
+                        previousDstBlendAlpha);
+                    RenderTexture.active = previousRenderTexture;
+                }
+
+                if (!didRender) {
+                    return false;
+                }
+
+                var previousColor = GUI.color;
+                GUI.color = Color.white;
+                GUI.DrawTexture(drawRect, previewTexture, ScaleMode.StretchToFill, true);
+                GUI.color = previousColor;
+                return true;
+            }
+            finally {
+                RenderTexture.ReleaseTemporary(previewTexture);
+            }
+        }
+
+        /// <summary>
+        /// RenderTexture へ Sprite の色をそのまま書き込む Blend 設定を適用する
+        /// </summary>
+        /// <param name="material">更新対象 Material</param>
+        private static void SetPreviewRenderTextureBlend(Material material) {
+            material.SetFloat(BlendOpPropertyId, (float)BlendOp.Add);
+            material.SetFloat(SrcBlendPropertyId, (float)BlendMode.One);
+            material.SetFloat(DstBlendPropertyId, (float)BlendMode.Zero);
+            material.SetFloat(SrcBlendAlphaPropertyId, (float)BlendMode.One);
+            material.SetFloat(DstBlendAlphaPropertyId, (float)BlendMode.Zero);
+        }
+
+        /// <summary>
+        /// Preview Material の Blend 設定を戻す
+        /// </summary>
+        private static void RestorePreviewBlend(Material material, float blendOp, float srcBlend, float dstBlend, float srcBlendAlpha, float dstBlendAlpha) {
+            material.SetFloat(BlendOpPropertyId, blendOp);
+            material.SetFloat(SrcBlendPropertyId, srcBlend);
+            material.SetFloat(DstBlendPropertyId, dstBlend);
+            material.SetFloat(SrcBlendAlphaPropertyId, srcBlendAlpha);
+            material.SetFloat(DstBlendAlphaPropertyId, dstBlendAlpha);
+        }
+
+        /// <summary>
+        /// SpriteMesh を描画できるか判定する
+        /// </summary>
+        /// <param name="vertices">頂点配列</param>
+        /// <param name="triangles">三角形インデックス配列</param>
+        /// <param name="uv">UV 配列</param>
+        /// <returns>描画できる場合 true</returns>
+        private static bool CanDrawSpriteMesh(Vector2[] vertices, ushort[] triangles, Vector2[] uv) {
+            if (vertices == null || triangles == null || uv == null || vertices.Length <= 0 || triangles.Length <= 0 || uv.Length <= 0 || triangles.Length % 3 != 0) {
+                return false;
+            }
+
+            for (var i = 0; i < triangles.Length; i++) {
+                var vertexIndex = triangles[i];
+                if (vertexIndex >= vertices.Length || vertexIndex >= uv.Length) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// SpriteMesh 頂点をプレビュー用のピクセル座標へ変換する
+        /// </summary>
+        /// <param name="sprite">対象 Sprite</param>
+        /// <param name="vertex">SpriteMesh 頂点</param>
+        /// <param name="drawSize">描画サイズ</param>
+        private static Vector2 GetSpriteMeshPreviewPosition(Sprite sprite, Vector2 vertex, Vector2 drawSize) {
             var spriteRect = sprite.rect;
-            return new Vector4(
-                spriteRect.x / texture.width,
-                spriteRect.y / texture.height,
-                Mathf.Max(0.0f, spriteRect.width / texture.width),
-                Mathf.Max(0.0f, spriteRect.height / texture.height));
+            if (spriteRect.width <= 0.0f || spriteRect.height <= 0.0f) {
+                return Vector2.zero;
+            }
+
+            var pixelsPerUnit = Mathf.Max(0.01f, sprite.pixelsPerUnit);
+            var pixelPosition = (vertex * pixelsPerUnit) + sprite.pivot;
+            return new Vector2(
+                pixelPosition.x / spriteRect.width * drawSize.x,
+                pixelPosition.y / spriteRect.height * drawSize.y);
         }
 
         /// <summary>
@@ -697,6 +861,15 @@ namespace UnitySpriteAnimation.Editor {
         /// タイムライン上のフレームプレビュー描画
         /// </summary>
         private void DrawTimelineFramePreview(int frameIndex) {
+            DrawTimelineFramePreview(frameIndex, 1.0f);
+        }
+
+        /// <summary>
+        /// タイムライン上のフレームプレビュー描画
+        /// </summary>
+        /// <param name="frameIndex">フレーム番号</param>
+        /// <param name="alpha">Sprite の表示 Alpha</param>
+        private void DrawTimelineFramePreview(int frameIndex, float alpha) {
             var rect = GUILayoutUtility.GetRect(10.0f, 10000.0f, 10.0f, 10000.0f);
             EditorGUI.DrawRect(rect, new Color(0.14f, 0.14f, 0.14f));
 
@@ -706,7 +879,7 @@ namespace UnitySpriteAnimation.Editor {
                 return;
             }
 
-            DrawSpritePreview(rect, sprite, 1.0f);
+            DrawSpritePreview(rect, sprite, 1.0f, alpha);
         }
 
         /// <summary>

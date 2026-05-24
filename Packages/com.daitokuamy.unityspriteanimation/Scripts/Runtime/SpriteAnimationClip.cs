@@ -53,6 +53,15 @@ namespace UnitySpriteAnimation {
         /// </summary>
         /// <param name="time">経過時間</param>
         public int GetFrameIndex(float time) {
+            return GetFrameIndex(time, _loop);
+        }
+
+        /// <summary>
+        /// 指定時間に対応するフレーム番号を取得する
+        /// </summary>
+        /// <param name="time">経過時間</param>
+        /// <param name="loop">ループ再生として評価するか</param>
+        public int GetFrameIndex(float time, bool loop) {
             if (!CanPlay) {
                 return -1;
             }
@@ -61,7 +70,7 @@ namespace UnitySpriteAnimation {
                 return 0;
             }
 
-            if (_loop) {
+            if (loop) {
                 time = Mathf.Repeat(time, Duration);
             }
             else {
@@ -79,7 +88,16 @@ namespace UnitySpriteAnimation {
         /// </summary>
         /// <param name="time">経過時間</param>
         public Sprite GetSprite(float time) {
-            var frameIndex = GetFrameIndex(time);
+            return GetSprite(time, _loop);
+        }
+
+        /// <summary>
+        /// 指定時間に対応する Sprite を取得する
+        /// </summary>
+        /// <param name="time">経過時間</param>
+        /// <param name="loop">ループ再生として評価するか</param>
+        public Sprite GetSprite(float time, bool loop) {
+            var frameIndex = GetFrameIndex(time, loop);
             return frameIndex >= 0 ? _sprites[frameIndex] : null;
         }
     }

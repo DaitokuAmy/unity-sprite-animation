@@ -462,6 +462,98 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &779789577
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 779789578}
+  - component: {fileID: 779789581}
+  - component: {fileID: 779789580}
+  - component: {fileID: 779789579}
+  m_Layer: 5
+  m_Name: SpriteMeshTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &779789578
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779789577}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1538054547}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -600}
+  m_SizeDelta: {x: 300, y: 300}
+  m_Pivot: {x: 0.5, y: 1}
+--- !u!114 &779789579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779789577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e5dd95c1f253394db665861f3150239, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnitySpriteAnimation::UnitySpriteAnimation.ImageSpriteAnimator
+  _animationClip: {fileID: 11400000, guid: e2672af0f8996bf4a8faefb7534da9f7, type: 2}
+  _playOnEnabled: 1
+  _updateMode: 0
+  _image: {fileID: 779789580}
+--- !u!114 &779789580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779789577}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 2100000, guid: d2e4dd5108317884795b1d5272cb25eb, type: 2}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 1
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &779789581
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 779789577}
+  m_CullTransparentMesh: 1
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
@@ -558,6 +650,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnitySpriteAnimation::UnitySpriteAnimation.RendererSpriteAnimator
   _animationClip: {fileID: 11400000, guid: 5172964f7d9e6334bb14f648fe5daad3, type: 2}
   _playOnEnabled: 1
+  _updateMode: 0
   _spriteRenderer: {fileID: 976317151}
 --- !u!212 &976317151
 SpriteRenderer:
@@ -900,6 +993,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnitySpriteAnimation::UnitySpriteAnimation.ImageSpriteAnimator
   _animationClip: {fileID: 11400000, guid: 5172964f7d9e6334bb14f648fe5daad3, type: 2}
   _playOnEnabled: 1
+  _updateMode: 0
   _image: {fileID: 1241819164}
 --- !u!1 &1512405025
 GameObject:
@@ -933,6 +1027,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnitySpriteAnimation::UnitySpriteAnimation.RendererSpriteAnimator
   _animationClip: {fileID: 11400000, guid: 5172964f7d9e6334bb14f648fe5daad3, type: 2}
   _playOnEnabled: 1
+  _updateMode: 0
   _spriteRenderer: {fileID: 1512405027}
 --- !u!212 &1512405027
 SpriteRenderer:
@@ -1102,6 +1197,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1241819163}
+  - {fileID: 779789578}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1156,6 +1252,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnitySpriteAnimation::UnitySpriteAnimation.RendererSpriteAnimator
   _animationClip: {fileID: 11400000, guid: 5172964f7d9e6334bb14f648fe5daad3, type: 2}
   _playOnEnabled: 1
+  _updateMode: 0
   _spriteRenderer: {fileID: 2127360223}
 --- !u!212 &2127360223
 SpriteRenderer:

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -23,13 +22,17 @@ namespace UnitySpriteAnimation.Editor {
             });
 
             element.RegisterCallback<DragPerformEvent>(evt => {
-                if (_clip == null || !CanAcceptDraggedSprites()) {
+                if (_clip == null) {
+                    return;
+                }
+
+                var sprites = GetDraggedFrameSprites();
+                if (sprites.Count <= 0) {
                     return;
                 }
 
                 DragAndDrop.AcceptDrag();
                 var targetFrameIndex = GetDropTargetFrameIndex(frameIndex, evt.localMousePosition.x);
-                var sprites = DragAndDrop.objectReferences.OfType<Sprite>().ToArray();
                 SetFrameSprites(targetFrameIndex, sprites);
                 evt.StopPropagation();
             });
@@ -100,6 +103,25 @@ namespace UnitySpriteAnimation.Editor {
         }
 
         /// <summary>
+        /// 選択フレームを削除操作として処理する
+        /// </summary>
+        private void DeleteSelectedFrameContent() {
+            if (!CanEditClipFrames() ||
+                _selectedFrameIndex < 0 ||
+                _selectedFrameIndex >= _spritesProperty.arraySize) {
+                return;
+            }
+
+            _serializedClip.Update();
+            if (_spritesProperty.GetArrayElementAtIndex(_selectedFrameIndex).objectReferenceValue == null) {
+                RemoveFrameAt(_selectedFrameIndex);
+                return;
+            }
+
+            ClearSelectedFrameSprite();
+        }
+
+        /// <summary>
         /// 指定フレームの Sprite 参照をクリアする
         /// </summary>
         private void ClearFrameSpriteAt(int frameIndex) {
@@ -111,6 +133,23 @@ namespace UnitySpriteAnimation.Editor {
             _spritesProperty.GetArrayElementAtIndex(frameIndex).objectReferenceValue = null;
             ApplyClipEdit();
             _selectedFrameIndex = frameIndex;
+            RefreshClipViews();
+        }
+
+        /// <summary>
+        /// フレームを全削除する
+        /// </summary>
+        private void ClearFrames() {
+            if (!CanEditClipFrames() || _spritesProperty.arraySize <= 0) {
+                return;
+            }
+
+            BeginClipEdit("Clear Sprite Animation Frames", true);
+            _spritesProperty.arraySize = 0;
+            ApplyClipEdit();
+
+            _selectedFrameIndex = -1;
+            ResetTimelineDragState();
             RefreshClipViews();
         }
 
@@ -284,14 +323,56 @@ namespace UnitySpriteAnimation.Editor {
         /// D&D 受付可能か
         /// </summary>
         private static bool CanAcceptDraggedSprites() {
-            return DragAndDrop.objectReferences.OfType<Sprite>().Any();
+            return GetDraggedFrameSprites().Count > 0;
+        }
+
+        /// <summary>
+        /// D&D 中のオブジェクトからフレーム設定可能な Sprite を取得する
+        /// </summary>
+        private static IReadOnlyList<Sprite> GetDraggedFrameSprites() {
+            var sprites = new List<Sprite>();
+            foreach (var objectReference in DragAndDrop.objectReferences) {
+                if (objectReference is Sprite sprite) {
+                    sprites.Add(sprite);
+                    continue;
+                }
+
+                if (objectReference is Texture2D texture && TryGetSingleSpriteFromTexture(texture, out var textureSprite)) {
+                    sprites.Add(textureSprite);
+                }
+            }
+
+            return sprites;
+        }
+
+        /// <summary>
+        /// Texture から Single Sprite を取得する
+        /// </summary>
+        /// <param name="texture">対象 Texture</param>
+        /// <param name="sprite">取得した Sprite</param>
+        /// <returns>取得できた場合 true</returns>
+        private static bool TryGetSingleSpriteFromTexture(Texture2D texture, out Sprite sprite) {
+            sprite = null;
+            var assetPath = AssetDatabase.GetAssetPath(texture);
+            if (string.IsNullOrEmpty(assetPath)) {
+                return false;
+            }
+
+            if (AssetImporter.GetAtPath(assetPath) is not TextureImporter textureImporter ||
+                textureImporter.textureType != TextureImporterType.Sprite ||
+                textureImporter.spriteImportMode != SpriteImportMode.Single) {
+                return false;
+            }
+
+            sprite = AssetDatabase.LoadAssetAtPath<Sprite>(assetPath);
+            return sprite != null;
         }
 
         /// <summary>
         /// タイムライン上の位置からフレーム番号を取得
         /// </summary>
         private int GetFrameIndexFromTimelinePosition(float localPositionX) {
-            var framePitch = FrameCellWidth + 6.0f;
+            var framePitch = FrameCellWidth + FrameCellGap;
             return Mathf.Max(0, Mathf.FloorToInt(Mathf.Max(0.0f, localPositionX) / framePitch));
         }
 
@@ -466,7 +547,7 @@ namespace UnitySpriteAnimation.Editor {
                 return;
             }
 
-            ClearSelectedFrameSprite();
+            DeleteSelectedFrameContent();
             evt.StopPropagation();
         }
 
@@ -552,7 +633,7 @@ namespace UnitySpriteAnimation.Editor {
                 return;
             }
 
-            ClearSelectedFrameSprite();
+            DeleteSelectedFrameContent();
             evt.StopPropagation();
         }
 
@@ -583,7 +664,7 @@ namespace UnitySpriteAnimation.Editor {
         /// タイムライン位置から挿入位置を取得する
         /// </summary>
         private int GetFrameInsertIndexFromTimelinePosition(float localPositionX) {
-            var framePitch = FrameCellWidth + 6.0f;
+            var framePitch = FrameCellWidth + FrameCellGap;
             var rawIndex = Mathf.FloorToInt(Mathf.Max(0.0f, localPositionX) / framePitch);
             var offsetInCell = Mathf.Max(0.0f, localPositionX) - (rawIndex * framePitch);
             var insertIndex = offsetInCell > (FrameCellWidth * 0.5f) ? rawIndex + 1 : rawIndex;

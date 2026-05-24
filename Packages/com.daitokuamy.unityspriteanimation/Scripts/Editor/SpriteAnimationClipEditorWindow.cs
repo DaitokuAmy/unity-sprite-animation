@@ -14,7 +14,13 @@ namespace UnitySpriteAnimation.Editor {
         private const float FrameCellWidth = 84.0f;
 
         /// <summary>タイムラインのフレーム高さ</summary>
-        private const float FrameCellHeight = 116.0f;
+        private const float FrameCellHeight = 122.0f;
+
+        /// <summary>タイムラインのフレーム間隔</summary>
+        private const float FrameCellGap = 6.0f;
+
+        /// <summary>タイムラインのフレーム横余白</summary>
+        private const float FrameCellHorizontalPadding = 4.0f;
 
         /// <summary>タイムラインサムネイルの高さ</summary>
         private const float TimelinePreviewHeight = 56.0f;
@@ -24,6 +30,24 @@ namespace UnitySpriteAnimation.Editor {
 
         /// <summary>タイムラインラベルの最大文字数</summary>
         private const int TimelineLabelMaxCharacters = 18;
+
+        /// <summary>タイムライン連続フレーム表示の高さ</summary>
+        private const float TimelineHoldIndicatorHeight = 4.0f;
+
+        /// <summary>タイムライン連続フレーム表示のフレーム下余白</summary>
+        private const float TimelineHoldIndicatorTopMargin = 0.0f;
+
+        /// <summary>タイムライン連続フレーム表示の角丸</summary>
+        private const float TimelineHoldIndicatorRadius = 1.0f;
+
+        /// <summary>タイムライン連続フレーム表示の Alpha</summary>
+        private const float TimelineHoldIndicatorAlpha = 0.86f;
+
+        /// <summary>タイムライン上の連続フレームサムネイル Alpha</summary>
+        private const float TimelineRepeatFramePreviewAlpha = 0.62f;
+
+        /// <summary>FlipBookBlend の最大時間から引く余白</summary>
+        private const float FlipBookBlendDurationEpsilon = 0.0001f;
 
         /// <summary>インスペクタ領域の幅</summary>
         private const float InspectorWidth = 320.0f;
@@ -58,6 +82,7 @@ namespace UnitySpriteAnimation.Editor {
         private SerializedProperty _spritesProperty;
 
         private ObjectField _clipField;
+        private Button _clearFramesButton;
         private IMGUIContainer _previewContainer;
         private VisualElement _inspectorContainer;
         private Label _inspectorTitleLabel;
@@ -77,6 +102,7 @@ namespace UnitySpriteAnimation.Editor {
         private Toggle _timelineLoopToggle;
         private Toggle _timelineFlipBookBlendToggle;
         private FloatField _timelineFlipBookBlendDurationField;
+        private Button _timelineFlipBookBlendDurationAutoButton;
         private FloatField _timelineFrameRateField;
         private Slider _previewScaleSlider;
         private Label _previewScaleLabel;
@@ -239,6 +265,7 @@ namespace UnitySpriteAnimation.Editor {
         /// Clip の表示を更新する
         /// </summary>
         private void RefreshClipViews() {
+            RefreshToolbar();
             RefreshInspector();
             RebuildTimeline();
             RefreshTimelineHeader();

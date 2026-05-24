@@ -23,7 +23,22 @@ namespace UnitySpriteAnimation.Editor {
             _clipField.RegisterValueChangedCallback(evt => SetClip(evt.newValue as SpriteAnimationClip));
             toolbar.Add(_clipField);
 
+            _clearFramesButton = new Button(ClearFrames) {
+                text = "Clear Frames",
+            };
+            _clearFramesButton.SetEnabled(_clip != null && _clip.FrameCount > 0);
+            toolbar.Add(_clearFramesButton);
+
             root.Add(toolbar);
+        }
+
+        /// <summary>
+        /// ツールバー表示を更新する
+        /// </summary>
+        private void RefreshToolbar() {
+            if (_clearFramesButton != null) {
+                _clearFramesButton.SetEnabled(_clip != null && _clip.FrameCount > 0);
+            }
         }
 
         /// <summary>
@@ -350,7 +365,7 @@ namespace UnitySpriteAnimation.Editor {
             _timelineFlipBookBlendDurationField = new FloatField("Blend Seconds");
             _timelineFlipBookBlendDurationField.label = string.Empty;
             _timelineFlipBookBlendDurationField.style.width = 72.0f;
-            _timelineFlipBookBlendDurationField.style.marginRight = 12.0f;
+            _timelineFlipBookBlendDurationField.style.marginRight = 4.0f;
             _timelineFlipBookBlendDurationField.RegisterValueChangedCallback(evt => {
                 if (_clip == null || _serializedClip == null || _flipBookBlendDurationProperty == null) {
                     return;
@@ -366,8 +381,13 @@ namespace UnitySpriteAnimation.Editor {
                 ApplyClipEdit();
                 RefreshClipViews();
             });
+            _timelineFlipBookBlendDurationAutoButton = new Button(SetAutoFlipBookBlendDuration) {
+                text = "Auto",
+            };
+            _timelineFlipBookBlendDurationAutoButton.style.marginRight = 12.0f;
             flipBookBlendDurationGroup.Add(flipBookBlendDurationLabel);
             flipBookBlendDurationGroup.Add(_timelineFlipBookBlendDurationField);
+            flipBookBlendDurationGroup.Add(_timelineFlipBookBlendDurationAutoButton);
             controls.Add(flipBookBlendDurationGroup);
 
             var durationGroup = CreateHeaderFieldGroup("Total Seconds", out var durationLabel);
@@ -482,37 +502,57 @@ namespace UnitySpriteAnimation.Editor {
         private VisualElement CreateFrameElement(int frameIndex) {
             var root = new VisualElement();
             root.style.width = FrameCellWidth;
-            root.style.height = FrameCellHeight;
-            root.style.marginRight = 6.0f;
-            root.style.paddingLeft = 4.0f;
-            root.style.paddingRight = 4.0f;
-            root.style.paddingTop = 4.0f;
-            root.style.paddingBottom = 4.0f;
+            root.style.height = FrameCellHeight + TimelineHoldIndicatorTopMargin + TimelineHoldIndicatorHeight;
+            root.style.marginRight = FrameCellGap;
+            root.style.position = Position.Relative;
+            root.style.overflow = Overflow.Visible;
             root.style.opacity = (_isDraggingFrame && frameIndex == _dragFrameIndex) ? 0.55f : 1.0f;
-            root.style.backgroundColor = frameIndex == _selectedFrameIndex ? new Color(0.20f, 0.32f, 0.48f) : new Color(0.19f, 0.19f, 0.19f);
-            root.style.borderBottomWidth = 1.0f;
-            root.style.borderTopWidth = 1.0f;
-            root.style.borderLeftWidth = 1.0f;
-            root.style.borderRightWidth = 1.0f;
-            root.style.borderBottomColor = new Color(0.30f, 0.30f, 0.30f);
-            root.style.borderTopColor = new Color(0.30f, 0.30f, 0.30f);
-            root.style.borderLeftColor = new Color(0.30f, 0.30f, 0.30f);
-            root.style.borderRightColor = new Color(0.30f, 0.30f, 0.30f);
-            ApplyFrameInsertionMarker(root, frameIndex);
+
+            var body = new VisualElement();
+            body.style.width = FrameCellWidth;
+            body.style.height = FrameCellHeight;
+            body.style.paddingLeft = FrameCellHorizontalPadding;
+            body.style.paddingRight = FrameCellHorizontalPadding;
+            body.style.paddingTop = 4.0f;
+            body.style.paddingBottom = 4.0f;
+            body.style.position = Position.Relative;
+            body.style.overflow = Overflow.Hidden;
+            body.style.backgroundColor = frameIndex == _selectedFrameIndex ? new Color(0.20f, 0.32f, 0.48f) : new Color(0.19f, 0.19f, 0.19f);
+            body.style.borderBottomWidth = 1.0f;
+            body.style.borderTopWidth = 1.0f;
+            body.style.borderLeftWidth = 1.0f;
+            body.style.borderRightWidth = 1.0f;
+            body.style.borderBottomColor = new Color(0.30f, 0.30f, 0.30f);
+            body.style.borderTopColor = new Color(0.30f, 0.30f, 0.30f);
+            body.style.borderLeftColor = new Color(0.30f, 0.30f, 0.30f);
+            body.style.borderRightColor = new Color(0.30f, 0.30f, 0.30f);
+            ApplyFrameInsertionMarker(body, frameIndex);
+            root.Add(body);
 
             var header = new Label(frameIndex.ToString());
             header.style.unityTextAlign = TextAnchor.MiddleCenter;
             header.style.unityFontStyleAndWeight = FontStyle.Bold;
-            root.Add(header);
-
-            var preview = new IMGUIContainer(() => DrawTimelineFramePreview(frameIndex));
-            preview.style.height = TimelinePreviewHeight;
-            preview.style.flexShrink = 0.0f;
-            preview.style.marginTop = 4.0f;
-            preview.style.marginBottom = 4.0f;
-            root.Add(preview);
+            body.Add(header);
 
             var sprite = GetFrameSprite(frameIndex);
+            var hasPreviousSameSprite = IsSameFrameSprite(frameIndex - 1, sprite);
+            var hasNextSameSprite = IsSameFrameSprite(frameIndex + 1, sprite);
+            var previewAlpha = hasPreviousSameSprite ? TimelineRepeatFramePreviewAlpha : 1.0f;
+
+            var previewArea = new VisualElement();
+            previewArea.style.height = TimelinePreviewHeight;
+            previewArea.style.flexShrink = 0.0f;
+            previewArea.style.marginTop = 4.0f;
+            previewArea.style.marginBottom = 4.0f;
+            previewArea.style.position = Position.Relative;
+            previewArea.style.overflow = Overflow.Hidden;
+            body.Add(previewArea);
+
+            var preview = new IMGUIContainer(() => DrawTimelineFramePreview(frameIndex, previewAlpha));
+            preview.style.height = TimelinePreviewHeight;
+            preview.style.flexShrink = 0.0f;
+            previewArea.Add(preview);
+
             var nameLabel = new Label(GetTimelineFrameLabelText(sprite));
             nameLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
             nameLabel.style.whiteSpace = WhiteSpace.Normal;
@@ -520,7 +560,9 @@ namespace UnitySpriteAnimation.Editor {
             nameLabel.style.maxHeight = TimelineLabelHeight;
             nameLabel.style.flexShrink = 0.0f;
             nameLabel.style.overflow = Overflow.Hidden;
-            root.Add(nameLabel);
+            body.Add(nameLabel);
+
+            AddTimelineHoldIndicator(root, hasPreviousSameSprite, hasNextSameSprite);
 
             root.RegisterCallback<MouseDownEvent>(evt => {
                 if (evt.button != 0) {
@@ -532,12 +574,80 @@ namespace UnitySpriteAnimation.Editor {
             });
 
             RegisterFrameContextMenu(root, frameIndex);
+            RegisterFrameContextMenu(body, frameIndex);
             RegisterFrameContextMenu(preview, frameIndex);
             RegisterFrameContextMenu(header, frameIndex);
             RegisterFrameContextMenu(nameLabel, frameIndex);
             RegisterTimelineDropHandlers(root, frameIndex);
+            RegisterTimelineDropHandlers(body, frameIndex);
 
             return root;
+        }
+
+        /// <summary>
+        /// タイムラインに連続フレーム表示を追加する
+        /// </summary>
+        /// <param name="root">追加先</param>
+        /// <param name="hasPreviousSameSprite">前フレームが同じ Sprite の場合 true</param>
+        /// <param name="hasNextSameSprite">次フレームが同じ Sprite の場合 true</param>
+        private static void AddTimelineHoldIndicator(VisualElement root, bool hasPreviousSameSprite, bool hasNextSameSprite) {
+            if (!hasPreviousSameSprite && !hasNextSameSprite) {
+                return;
+            }
+
+            var indicatorTop = FrameCellHeight + TimelineHoldIndicatorTopMargin;
+            var indicator = CreateTimelineHoldIndicatorPart();
+            indicator.style.left = 0.0f;
+            indicator.style.top = indicatorTop;
+            indicator.style.width = FrameCellWidth;
+            ApplyTimelineHoldIndicatorRadius(indicator, !hasPreviousSameSprite, !hasNextSameSprite);
+            root.Add(indicator);
+
+            if (!hasNextSameSprite) {
+                return;
+            }
+
+            var bridge = CreateTimelineHoldIndicatorPart();
+            bridge.style.left = FrameCellWidth;
+            bridge.style.top = indicatorTop;
+            bridge.style.width = FrameCellGap;
+            root.Add(bridge);
+        }
+
+        /// <summary>
+        /// 指定フレームが同じ Sprite か判定する
+        /// </summary>
+        /// <param name="frameIndex">対象フレーム</param>
+        /// <param name="sprite">比較 Sprite</param>
+        private bool IsSameFrameSprite(int frameIndex, Sprite sprite) {
+            return sprite != null && GetFrameSprite(frameIndex) == sprite;
+        }
+
+        /// <summary>
+        /// タイムライン連続フレーム表示の要素を生成する
+        /// </summary>
+        private static VisualElement CreateTimelineHoldIndicatorPart() {
+            var element = new VisualElement();
+            element.pickingMode = PickingMode.Ignore;
+            element.style.position = Position.Absolute;
+            element.style.height = TimelineHoldIndicatorHeight;
+            element.style.backgroundColor = new Color(0.25f, 0.74f, 0.95f, TimelineHoldIndicatorAlpha);
+            return element;
+        }
+
+        /// <summary>
+        /// タイムライン連続フレーム表示の角丸を適用する
+        /// </summary>
+        /// <param name="element">対象要素</param>
+        /// <param name="roundStart">先頭を丸める場合 true</param>
+        /// <param name="roundEnd">末尾を丸める場合 true</param>
+        private static void ApplyTimelineHoldIndicatorRadius(VisualElement element, bool roundStart, bool roundEnd) {
+            var startRadius = roundStart ? TimelineHoldIndicatorRadius : 0.0f;
+            var endRadius = roundEnd ? TimelineHoldIndicatorRadius : 0.0f;
+            element.style.borderTopLeftRadius = startRadius;
+            element.style.borderBottomLeftRadius = startRadius;
+            element.style.borderTopRightRadius = endRadius;
+            element.style.borderBottomRightRadius = endRadius;
         }
 
         /// <summary>
@@ -572,6 +682,10 @@ namespace UnitySpriteAnimation.Editor {
                 _timelineFlipBookBlendDurationField.SetEnabled(canEditFlipBookBlendDuration);
             }
 
+            if (_timelineFlipBookBlendDurationAutoButton != null) {
+                _timelineFlipBookBlendDurationAutoButton.SetEnabled(_clip != null && _clip.EnableFlipBookBlend);
+            }
+
             if (_timelineDurationLabel != null) {
                 _timelineDurationLabel.text = _clip != null ? $"{_clip.Duration:0.000}s" : "0.000s";
             }
@@ -600,6 +714,34 @@ namespace UnitySpriteAnimation.Editor {
 
             _timelineFlipBookBlendWarningHelpBox.text = $"FlipBookBlendDuration is longer than one frame ({frameDuration:0.###} sec). Runtime playback clamps it based on the effective frame time.";
             _timelineFlipBookBlendWarningHelpBox.style.display = DisplayStyle.Flex;
+        }
+
+        /// <summary>
+        /// 現在の FrameRate から FlipBookBlend 秒数を自動設定する
+        /// </summary>
+        private void SetAutoFlipBookBlendDuration() {
+            if (_clip == null || _serializedClip == null || _flipBookBlendDurationProperty == null) {
+                return;
+            }
+
+            var maxDuration = GetMaxFlipBookBlendDuration(_clip.FrameRate);
+            if (Mathf.Approximately(maxDuration, _flipBookBlendDurationProperty.floatValue)) {
+                return;
+            }
+
+            BeginClipEdit("Auto Set Sprite Animation FlipBookBlend Duration", false);
+            _flipBookBlendDurationProperty.floatValue = maxDuration;
+            ApplyClipEdit();
+            RefreshClipViews();
+        }
+
+        /// <summary>
+        /// FrameRate から最大 FlipBookBlend 秒数を取得する
+        /// </summary>
+        /// <param name="frameRate">対象 FrameRate</param>
+        private static float GetMaxFlipBookBlendDuration(float frameRate) {
+            var frameDuration = 1.0f / Mathf.Max(0.01f, frameRate);
+            return Mathf.Max(0.0f, frameDuration - FlipBookBlendDurationEpsilon);
         }
 
         /// <summary>

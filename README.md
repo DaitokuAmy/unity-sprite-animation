@@ -129,21 +129,35 @@ public sealed class ImageSpriteAnimationExample : MonoBehaviour
 ```csharp
 public abstract class SpriteAnimator : MonoBehaviour
 {
+    public enum UpdateMode
+    {
+        LateUpdate,
+        Update,
+        ManualUpdate
+    }
+
     public float TimeScale { get; set; }
     public SpriteAnimationClip AnimationClip { get; }
     public bool PlayOnEnabled { get; set; }
+    public UpdateMode PlaybackUpdateMode { get; set; }
     public bool IsPlaying { get; }
     public float CurrentTime { get; }
     public int CurrentFrameIndex { get; }
 
     public void SetAnimationClip(SpriteAnimationClip clip);
     public void Play();
+    public void Play(bool loop);
     public void Pause();
     public void Resume();
     public void Stop();
     public void Evaluate(SpriteAnimationClip clip, float time);
+    public void Evaluate(SpriteAnimationClip clip, float time, bool loop);
+    public void ManualUpdate(float deltaTime);
 }
 ```
+
+`Play(bool loop)` と `Evaluate(SpriteAnimationClip clip, float time, bool loop)` を使うと、`SpriteAnimationClip` の `Loop` 設定ではなく引数の `loop` でループ評価できます。
+`PlaybackUpdateMode` は既定で `SpriteAnimator.UpdateMode.LateUpdate` です。`SpriteAnimator.UpdateMode.Update` では `Update`、`SpriteAnimator.UpdateMode.ManualUpdate` では `ManualUpdate(float deltaTime)` で再生を進めます。
 
 ## Clip Editor
 
