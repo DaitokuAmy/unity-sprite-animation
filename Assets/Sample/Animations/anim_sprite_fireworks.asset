@@ -15,7 +15,28 @@ MonoBehaviour:
   _frameRate: 10
   _sprites:
   - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: -426633545, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   - {fileID: 1100740184, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
   - {fileID: 1419678712, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
   - {fileID: 1597111525, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
@@ -70,10 +91,91 @@ MonoBehaviour:
   - {fileID: 220077182, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
   - {fileID: 1326749099, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
   - {fileID: 437363895, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
-  - {fileID: -1395346687, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
-  - {fileID: -2121339777, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
   - {fileID: -184834568, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
   - {fileID: 757876593, guid: eef29876dfa4377429b06c28b8a4dae7, type: 3}
+  _extensionSpriteLayers:
+  - _layerName: Test
+    _placement: 0
+    _sprites:
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 0}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 21300000, guid: cf05f8ee6faf42f2b17050ef9909e853, type: 3}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
   _loop: 1
   _enableFlipBookBlend: 1
   _flipBookBlendDuration: 0.1

@@ -1,0 +1,13 @@
+{
+    "name": "UnitySpriteAnimation.Editor.Tests",
+    "references": [
+        "UnitySpriteAnimation",
+        "UnitySpriteAnimation.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

@@ -15,6 +15,9 @@ namespace UnitySpriteAnimation {
         [SerializeField, Tooltip("再生順に並べる Sprite 一覧")]
         private Sprite[] _sprites;
 
+        [SerializeField, Tooltip("主レイヤーに同期する拡張レイヤー")]
+        private SpriteAnimationLayer[] _extensionSpriteLayers;
+
         [SerializeField, Tooltip("ループ再生するか")]
         private bool _loop = true;
 
@@ -29,6 +32,9 @@ namespace UnitySpriteAnimation {
 
         /// <summary>再生する Sprite 一覧</summary>
         public IReadOnlyList<Sprite> Sprites => _sprites;
+
+        /// <summary>主レイヤーに同期する拡張レイヤー一覧</summary>
+        public IReadOnlyList<SpriteAnimationLayer> ExtensionSpriteLayers => _extensionSpriteLayers ?? System.Array.Empty<SpriteAnimationLayer>();
 
         /// <summary>ループ再生するか</summary>
         public bool Loop => _loop;
@@ -47,6 +53,20 @@ namespace UnitySpriteAnimation {
 
         /// <summary>再生可能か</summary>
         public bool CanPlay => FrameCount > 0;
+
+        /// <summary>名前に対応する拡張レイヤーを取得する</summary>
+        /// <param name="layerName">大文字小文字を区別するレイヤー名</param>
+        public SpriteAnimationLayer GetExtensionSpriteLayer(string layerName) {
+            if (string.IsNullOrEmpty(layerName)) {
+                return null;
+            }
+            foreach (var layer in ExtensionSpriteLayers) {
+                if (layer != null && layer.LayerName == layerName) {
+                    return layer;
+                }
+            }
+            return null;
+        }
 
         /// <summary>
         /// 指定時間に対応するフレーム番号を取得する
@@ -99,6 +119,14 @@ namespace UnitySpriteAnimation {
         public Sprite GetSprite(float time, bool loop) {
             var frameIndex = GetFrameIndex(time, loop);
             return frameIndex >= 0 ? _sprites[frameIndex] : null;
+        }
+
+        /// <summary>拡張レイヤーの名前とフレーム数を検証する</summary>
+        private void OnValidate() {
+            var usedNames = new HashSet<string>(System.StringComparer.Ordinal);
+            foreach (var layer in ExtensionSpriteLayers) {
+                layer?.Validate(FrameCount, usedNames);
+            }
         }
     }
 }

@@ -68,9 +68,12 @@ namespace UnitySpriteAnimation.Editor {
         private const float TimelineDragStartDistance = 4.0f;
 
         [SerializeField] private SpriteAnimationClip _clip;
+        [SerializeField] private int _selectedLayerIndex = -1;
         [SerializeField] private int _selectedFrameIndex = -1;
         [SerializeField] private bool _hasCopiedFrame;
         [SerializeField] private Sprite _copiedFrameSprite;
+        [SerializeField] private List<string> _copiedLayerNames = new();
+        [SerializeField] private List<Sprite> _copiedLayerSprites = new();
         [SerializeField] private Color _previewBackgroundColor = new(0.10f, 0.10f, 0.10f, 1.0f);
 
         private readonly List<VisualElement> _frameElements = new();
@@ -79,7 +82,18 @@ namespace UnitySpriteAnimation.Editor {
         private SerializedProperty _loopProperty;
         private SerializedProperty _enableFlipBookBlendProperty;
         private SerializedProperty _flipBookBlendDurationProperty;
-        private SerializedProperty _spritesProperty;
+        private VisualElement _layerToolbar;
+
+        /// <summary>選択レイヤーの Sprite 配列</summary>
+        private SerializedProperty _spritesProperty {
+            get {
+                var layers = _serializedClip?.FindProperty("_extensionSpriteLayers");
+                if (layers != null && _selectedLayerIndex >= 0 && _selectedLayerIndex < layers.arraySize) {
+                    return layers.GetArrayElementAtIndex(_selectedLayerIndex).FindPropertyRelative("_sprites");
+                }
+                return _serializedClip?.FindProperty("_sprites");
+            }
+        }
 
         private ObjectField _clipField;
         private Button _clearFramesButton;
@@ -209,12 +223,12 @@ namespace UnitySpriteAnimation.Editor {
         /// ルート要素のコールバックを登録する
         /// </summary>
         private void RegisterRootCallbacks() {
-            rootVisualElement.UnregisterCallback<KeyDownEvent>(OnRootKeyDown);
+            rootVisualElement.UnregisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
             rootVisualElement.UnregisterCallback<ValidateCommandEvent>(OnValidateCommand);
             rootVisualElement.UnregisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             rootVisualElement.UnregisterCallback<MouseMoveEvent>(OnRootMouseMove);
             rootVisualElement.UnregisterCallback<MouseUpEvent>(OnRootMouseUp);
-            rootVisualElement.RegisterCallback<KeyDownEvent>(OnRootKeyDown);
+            rootVisualElement.RegisterCallback<KeyDownEvent>(OnRootKeyDown, TrickleDown.TrickleDown);
             rootVisualElement.RegisterCallback<ValidateCommandEvent>(OnValidateCommand);
             rootVisualElement.RegisterCallback<ExecuteCommandEvent>(OnExecuteCommand);
             rootVisualElement.RegisterCallback<MouseMoveEvent>(OnRootMouseMove);
@@ -243,13 +257,14 @@ namespace UnitySpriteAnimation.Editor {
         /// </summary>
         /// <param name="clip">設定する Clip</param>
         private void SetClip(SpriteAnimationClip clip) {
+            var previousClip = _clip;
             _clip = clip;
             _serializedClip = _clip != null ? new SerializedObject(_clip) : null;
             _frameRateProperty = _serializedClip?.FindProperty("_frameRate");
             _loopProperty = _serializedClip?.FindProperty("_loop");
             _enableFlipBookBlendProperty = _serializedClip?.FindProperty("_enableFlipBookBlend");
             _flipBookBlendDurationProperty = _serializedClip?.FindProperty("_flipBookBlendDuration");
-            _spritesProperty = _serializedClip?.FindProperty("_sprites");
+            _selectedLayerIndex = previousClip == clip && clip != null ? Mathf.Clamp(_selectedLayerIndex, -1, clip.ExtensionSpriteLayers.Count - 1) : -1;
             _selectedFrameIndex = _clip != null && _clip.FrameCount > 0 ? Mathf.Clamp(_selectedFrameIndex, 0, _clip.FrameCount - 1) : -1;
             ResetPreviewFlipBookBlendState(_clip != null ? _clip.GetFrameIndex(_previewTime) : -1);
 
@@ -265,6 +280,7 @@ namespace UnitySpriteAnimation.Editor {
         /// Clip の表示を更新する
         /// </summary>
         private void RefreshClipViews() {
+            RefreshLayerToolbar();
             RefreshToolbar();
             RefreshInspector();
             RebuildTimeline();
@@ -292,6 +308,13 @@ namespace UnitySpriteAnimation.Editor {
         /// </summary>
         private bool CanEditClipFrames() {
             return _clip != null && _serializedClip != null && _spritesProperty != null;
+        }
+
+        /// <summary>
+        /// Main 選択時にコマ数を変更できるか
+        /// </summary>
+        private bool CanChangeFrameCount() {
+            return _selectedLayerIndex < 0 && CanEditClipFrames();
         }
 
         /// <summary>

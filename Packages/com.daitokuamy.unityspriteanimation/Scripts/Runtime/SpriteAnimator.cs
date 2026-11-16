@@ -30,6 +30,9 @@ namespace UnitySpriteAnimation {
         [SerializeField, Tooltip("再生更新を行うタイミング")]
         private UpdateMode _updateMode = UpdateMode.LateUpdate;
 
+        [SerializeField, Tooltip("拡張レイヤー名と Image または SpriteRenderer の表示先")]
+        private SpriteAnimationLayerBinding[] _extensionLayerBindings;
+        private int _previousLayerFrameIndex = -1;
         private float _timeScale = 1.0f;
         private float _currentTime;
         private int _currentFrameIndex = -1;
@@ -96,6 +99,16 @@ namespace UnitySpriteAnimation {
         /// <param name="toSprite">遷移先Sprite</param>
         /// <param name="fadeProgress">0.0-1.0 の補間率</param>
         protected abstract void ApplyFlipBookBlend(Sprite fromSprite, Sprite toSprite, float fadeProgress);
+
+        /// <summary>拡張レイヤー用に生成した Material を解放する</summary>
+        protected void ReleaseExtensionLayerMaterials() {
+            if (_extensionLayerBindings == null) {
+                return;
+            }
+            foreach (var binding in _extensionLayerBindings) {
+                binding?.Release();
+            }
+        }
 
         /// <summary>
         /// 生成時処理
@@ -441,7 +454,7 @@ namespace UnitySpriteAnimation {
                 _currentSprite = null;
                 _previousSprite = null;
                 _isFlipBookBlending = false;
-                ApplySingleSprite(null);
+                ApplyAllSingleSprites(null);
                 return;
             }
 
@@ -452,6 +465,7 @@ namespace UnitySpriteAnimation {
             }
 
             var previousFrameIndex = _currentFrameIndex;
+            _previousLayerFrameIndex = previousFrameIndex;
             var previousSprite = _currentSprite;
             _currentFrameIndex = frameIndex;
             _currentSprite = _animationClip.GetSprite(_currentTime, loop);
@@ -460,13 +474,13 @@ namespace UnitySpriteAnimation {
                 _previousSprite = previousSprite;
                 _flipBookBlendElapsedTime = 0.0f;
                 _isFlipBookBlending = true;
-                ApplyFlipBookBlend(_previousSprite, _currentSprite, 0.0f);
+                ApplyAllFlipBookBlends(_previousSprite, _currentSprite, 0.0f);
                 return;
             }
 
             _previousSprite = null;
             _isFlipBookBlending = false;
-            ApplySingleSprite(_currentSprite);
+            ApplyAllSingleSprites(_currentSprite);
         }
 
         /// <summary>
@@ -480,7 +494,7 @@ namespace UnitySpriteAnimation {
                 return false;
             }
 
-            if (!CanUseFlipBookBlendSprites(previousSprite, currentSprite)) {
+            if (!(CanUseFlipBookBlend && CanUseFlipBookBlendSprites(previousSprite, currentSprite)) && !CanBlendExtensionLayers()) {
                 return false;
             }
 
@@ -508,7 +522,7 @@ namespace UnitySpriteAnimation {
                 return false;
             }
 
-            return sprite.packingMode != SpritePackingMode.Tight;
+            return !sprite.packed || sprite.packingMode != SpritePackingMode.Tight;
         }
 
         /// <summary>
@@ -518,7 +532,7 @@ namespace UnitySpriteAnimation {
             if (_animationClip == null ||
                 !_animationClip.EnableFlipBookBlend ||
                 !_animationClip.CanPlay ||
-                !CanUseFlipBookBlend) {
+                (!CanUseFlipBookBlend && !CanBlendExtensionLayers())) {
                 return 0.0f;
             }
 
@@ -542,10 +556,10 @@ namespace UnitySpriteAnimation {
                 return;
             }
 
-            if (!CanUseFlipBookBlendSprites(_previousSprite, _currentSprite)) {
+            if (!(CanUseFlipBookBlend && CanUseFlipBookBlendSprites(_previousSprite, _currentSprite)) && !CanBlendExtensionLayers()) {
                 _isFlipBookBlending = false;
                 _previousSprite = null;
-                ApplySingleSprite(_currentSprite);
+                ApplyAllSingleSprites(_currentSprite);
                 return;
             }
 
@@ -553,13 +567,13 @@ namespace UnitySpriteAnimation {
             if (duration <= 0.0f) {
                 _isFlipBookBlending = false;
                 _previousSprite = null;
-                ApplySingleSprite(_currentSprite);
+                ApplyAllSingleSprites(_currentSprite);
                 return;
             }
 
             _flipBookBlendElapsedTime += Mathf.Max(0.0f, deltaTime);
             var fadeProgress = Mathf.Clamp01(_flipBookBlendElapsedTime / duration);
-            ApplyFlipBookBlend(_previousSprite, _currentSprite, fadeProgress);
+            ApplyAllFlipBookBlends(_previousSprite, _currentSprite, fadeProgress);
 
             if (fadeProgress < 1.0f) {
                 return;
@@ -567,7 +581,64 @@ namespace UnitySpriteAnimation {
 
             _isFlipBookBlending = false;
             _previousSprite = null;
-            ApplySingleSprite(_currentSprite);
+            ApplyAllSingleSprites(_currentSprite);
+        }
+
+        /// <summary>補間可能な拡張レイヤーが存在するかを取得する</summary>
+        private bool CanBlendExtensionLayers() {
+            if (_extensionLayerBindings == null || _animationClip == null) {
+                return false;
+            }
+            foreach (var binding in _extensionLayerBindings) {
+                if (binding == null || binding.Target == null || binding.Target.gameObject == gameObject || !binding.CanBlend) {
+                    continue;
+                }
+                var layer = _animationClip.GetExtensionSpriteLayer(binding.LayerName);
+                if (layer != null && CanUseFlipBookBlendSprites(layer.GetSprite(_previousLayerFrameIndex), layer.GetSprite(_currentFrameIndex))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>主レイヤーと拡張レイヤーを通常表示する</summary>
+        /// <param name="sprite">主レイヤーの Sprite</param>
+        private void ApplyAllSingleSprites(Sprite sprite) {
+            ApplySingleSprite(sprite);
+            ApplyExtensionLayers(1.0f, false);
+        }
+
+        /// <summary>主レイヤーと拡張レイヤーの補間表示を更新する</summary>
+        /// <param name="fromSprite">遷移元 Sprite</param>
+        /// <param name="toSprite">遷移先 Sprite</param>
+        /// <param name="fadeProgress">補間率</param>
+        private void ApplyAllFlipBookBlends(Sprite fromSprite, Sprite toSprite, float fadeProgress) {
+            if (CanUseFlipBookBlend && CanUseFlipBookBlendSprites(fromSprite, toSprite)) {
+                ApplyFlipBookBlend(fromSprite, toSprite, fadeProgress);
+            }
+            else {
+                ApplySingleSprite(toSprite);
+            }
+            ApplyExtensionLayers(fadeProgress, true);
+        }
+
+        /// <summary>共通フレーム番号で拡張レイヤーの表示先だけを更新する</summary>
+        /// <param name="fadeProgress">補間率</param>
+        /// <param name="blend">補間表示を行うか</param>
+        private void ApplyExtensionLayers(float fadeProgress, bool blend) {
+            if (_extensionLayerBindings == null) {
+                return;
+            }
+            foreach (var binding in _extensionLayerBindings) {
+                var target = binding?.Target;
+                if (target == null || target.gameObject == gameObject) {
+                    continue;
+                }
+                var layer = _animationClip != null ? _animationClip.GetExtensionSpriteLayer(binding.LayerName) : null;
+                var current = layer?.GetSprite(_currentFrameIndex);
+                var previous = blend ? layer?.GetSprite(_previousLayerFrameIndex) : null;
+                binding.Apply(current, previous, fadeProgress);
+            }
         }
 
         /// <summary>

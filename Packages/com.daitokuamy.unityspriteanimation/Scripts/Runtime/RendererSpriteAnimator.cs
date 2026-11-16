@@ -4,7 +4,6 @@ namespace UnitySpriteAnimation {
     /// <summary>
     /// SpriteRenderer に SpriteAnimation を適用するプレイヤー
     /// </summary>
-    [RequireComponent(typeof(SpriteRenderer))]
     public sealed class RendererSpriteAnimator : SpriteAnimator {
         [SerializeField, Tooltip("通常表示に使用する SpriteRenderer")]
         private SpriteRenderer _spriteRenderer;
@@ -20,6 +19,10 @@ namespace UnitySpriteAnimation {
         /// <inheritdoc />
         protected override void ApplySingleSprite(Sprite sprite) {
             EnsureComponents();
+            if (_spriteRenderer == null) {
+                return;
+            }
+
             ApplySpriteRendererState(_spriteRenderer, sprite, 1.0f, _spriteRendererBaseColor);
 
             if (Application.isPlaying) {
@@ -42,6 +45,10 @@ namespace UnitySpriteAnimation {
         /// <inheritdoc />
         protected override void ApplyFlipBookBlend(Sprite fromSprite, Sprite toSprite, float fadeProgress) {
             EnsureComponents();
+            if (_spriteRenderer == null) {
+                return;
+            }
+
             if (Application.isPlaying) {
                 var runtimeMaterial = GetRuntimeMaterial();
                 if (!SupportsFlipBookBlendMaterial(runtimeMaterial)) {
@@ -74,6 +81,7 @@ namespace UnitySpriteAnimation {
         /// 破棄時に生成済み Material を解放する
         /// </summary>
         private void OnDestroy() {
+            ReleaseExtensionLayerMaterials();
             ReleaseRuntimeMaterial();
         }
 

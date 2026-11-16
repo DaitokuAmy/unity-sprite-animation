@@ -5,7 +5,6 @@ namespace UnitySpriteAnimation {
     /// <summary>
     /// Image に SpriteAnimation を適用するプレイヤー
     /// </summary>
-    [RequireComponent(typeof(Image))]
     public sealed class ImageSpriteAnimator : SpriteAnimator {
         [SerializeField, Tooltip("通常表示に使用する Image")]
         private Image _image;
@@ -20,6 +19,10 @@ namespace UnitySpriteAnimation {
         /// <inheritdoc />
         protected override void ApplySingleSprite(Sprite sprite) {
             EnsureComponents();
+            if (_image == null) {
+                return;
+            }
+
             ApplyImageState(_image, sprite, 1.0f, _imageBaseColor);
 
             var material = GetRuntimeMaterial();
@@ -32,6 +35,10 @@ namespace UnitySpriteAnimation {
         /// <inheritdoc />
         protected override void ApplyFlipBookBlend(Sprite fromSprite, Sprite toSprite, float fadeProgress) {
             EnsureComponents();
+            if (_image == null) {
+                return;
+            }
+
             var material = GetRuntimeMaterial();
             if (!SupportsFlipBookBlendMaterial(material)) {
                 ApplySingleSprite(toSprite);
@@ -53,6 +60,7 @@ namespace UnitySpriteAnimation {
         /// 破棄時に生成済み Material を解放する
         /// </summary>
         private void OnDestroy() {
+            ReleaseExtensionLayerMaterials();
             if (_image != null && _runtimeMaterial != null && _image.material == _runtimeMaterial) {
                 _image.material = _sourceMaterial;
                 _image.SetMaterialDirty();

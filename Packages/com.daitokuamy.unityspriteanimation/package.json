@@ -1,7 +1,7 @@
 {
     "name": "com.daitokuamy.unityspriteanimation",
     "displayName": "Unity Sprite Animation",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "unity": "6000.0",
     "license" : "MIT",
     "dependencies": { },

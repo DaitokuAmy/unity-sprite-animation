@@ -82,16 +82,16 @@ namespace UnitySpriteAnimation.Editor {
             BeginClipEdit("Edit Sprite Animation Clip", true);
 
             var requiredSize = startFrameIndex + sprites.Count;
-            if (_spritesProperty.arraySize < requiredSize) {
-                _spritesProperty.arraySize = requiredSize;
+            if (_selectedLayerIndex < 0 && _spritesProperty.arraySize < requiredSize) {
+                ResizeLayerFrames(requiredSize);
             }
 
-            for (var i = 0; i < sprites.Count; i++) {
+            for (var i = 0; i < sprites.Count && startFrameIndex + i < _spritesProperty.arraySize; i++) {
                 _spritesProperty.GetArrayElementAtIndex(startFrameIndex + i).objectReferenceValue = sprites[i];
             }
 
             ApplyClipEdit();
-            _selectedFrameIndex = startFrameIndex;
+            _selectedFrameIndex = Mathf.Clamp(startFrameIndex, -1, _clip.FrameCount - 1);
             RefreshClipViews();
         }
 
@@ -140,12 +140,12 @@ namespace UnitySpriteAnimation.Editor {
         /// フレームを全削除する
         /// </summary>
         private void ClearFrames() {
-            if (!CanEditClipFrames() || _spritesProperty.arraySize <= 0) {
+            if (!CanChangeFrameCount() || _spritesProperty.arraySize <= 0) {
                 return;
             }
 
             BeginClipEdit("Clear Sprite Animation Frames", true);
-            _spritesProperty.arraySize = 0;
+            ResizeLayerFrames(0);
             ApplyClipEdit();
 
             _selectedFrameIndex = -1;
@@ -157,12 +157,12 @@ namespace UnitySpriteAnimation.Editor {
         /// 総フレーム数を変更する
         /// </summary>
         private void SetTotalFrameCount(int frameCount) {
-            if (!CanEditClipFrames()) {
+            if (!CanChangeFrameCount()) {
                 return;
             }
 
             BeginClipEdit("Resize Sprite Animation Frames", true);
-            _spritesProperty.arraySize = Mathf.Max(0, frameCount);
+            ResizeLayerFrames(Mathf.Max(0, frameCount));
             ApplyClipEdit();
 
             _selectedFrameIndex = _spritesProperty.arraySize > 0 ? Mathf.Clamp(_selectedFrameIndex, 0, _spritesProperty.arraySize - 1) : -1;
@@ -187,18 +187,8 @@ namespace UnitySpriteAnimation.Editor {
 
             BeginClipEdit("Reorder Sprite Animation Frame", true);
 
-            var sprites = new Sprite[_spritesProperty.arraySize];
-            for (var i = 0; i < _spritesProperty.arraySize; i++) {
-                sprites[i] = _spritesProperty.GetArrayElementAtIndex(i).objectReferenceValue as Sprite;
-            }
-
-            var reordered = new List<Sprite>(sprites);
-            var movingSprite = reordered[fromFrameIndex];
-            reordered.RemoveAt(fromFrameIndex);
-            reordered.Insert(destinationIndex, movingSprite);
-
-            for (var i = 0; i < reordered.Count; i++) {
-                _spritesProperty.GetArrayElementAtIndex(i).objectReferenceValue = reordered[i];
+            foreach (var sprites in GetLayerSpriteProperties()) {
+                sprites.MoveArrayElement(fromFrameIndex, destinationIndex);
             }
 
             ApplyClipEdit();
@@ -212,7 +202,7 @@ namespace UnitySpriteAnimation.Editor {
         /// 指定位置の次へフレームを挿入する
         /// </summary>
         private void InsertFrameAfter(int frameIndex) {
-            if (!CanEditClipFrames()) {
+            if (!CanChangeFrameCount()) {
                 return;
             }
 
@@ -220,17 +210,13 @@ namespace UnitySpriteAnimation.Editor {
 
             BeginClipEdit("Insert Sprite Animation Frame", true);
 
-            var previousSprites = new Sprite[_spritesProperty.arraySize];
-            for (var i = 0; i < _spritesProperty.arraySize; i++) {
-                previousSprites[i] = _spritesProperty.GetArrayElementAtIndex(i).objectReferenceValue as Sprite;
+            foreach (var sprites in GetLayerSpriteProperties()) {
+                sprites.arraySize++;
+                for (var i = sprites.arraySize - 1; i > insertIndex; i--) {
+                    sprites.GetArrayElementAtIndex(i).objectReferenceValue = sprites.GetArrayElementAtIndex(i - 1).objectReferenceValue;
+                }
+                sprites.GetArrayElementAtIndex(insertIndex).objectReferenceValue = null;
             }
-
-            _spritesProperty.arraySize++;
-            for (var i = _spritesProperty.arraySize - 1; i > insertIndex; i--) {
-                _spritesProperty.GetArrayElementAtIndex(i).objectReferenceValue = previousSprites[i - 1];
-            }
-
-            _spritesProperty.GetArrayElementAtIndex(insertIndex).objectReferenceValue = null;
 
             ApplyClipEdit();
             _selectedFrameIndex = insertIndex;
@@ -246,7 +232,7 @@ namespace UnitySpriteAnimation.Editor {
         private void InsertFrameAfter(int frameIndex, Sprite sprite) {
             InsertFrameAfter(frameIndex);
 
-            if (!CanEditClipFrames() || _selectedFrameIndex < 0 || _selectedFrameIndex >= _spritesProperty.arraySize) {
+            if (!CanChangeFrameCount() || _selectedFrameIndex < 0 || _selectedFrameIndex >= _spritesProperty.arraySize) {
                 return;
             }
 
@@ -260,11 +246,13 @@ namespace UnitySpriteAnimation.Editor {
         /// 指定フレームを複製して右隣へ追加する
         /// </summary>
         private void DuplicateFrameAt(int frameIndex) {
-            if (!CanEditClipFrames() || frameIndex < 0 || frameIndex >= _spritesProperty.arraySize) {
+            if (!CanChangeFrameCount() || frameIndex < 0 || frameIndex >= _spritesProperty.arraySize) {
                 return;
             }
 
-            InsertFrameAfter(frameIndex, GetFrameSprite(frameIndex));
+            CopyFrameAt(frameIndex);
+            _selectedFrameIndex = frameIndex;
+            PasteCopiedFrameAfterSelected();
         }
 
         /// <summary>
@@ -284,33 +272,64 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             _copiedFrameSprite = GetFrameSprite(frameIndex);
+            _copiedLayerNames.Clear();
+            _copiedLayerSprites.Clear();
+            foreach (var layer in _clip.ExtensionSpriteLayers) {
+                if (layer != null) {
+                    _copiedLayerNames.Add(layer.LayerName);
+                    _copiedLayerSprites.Add(layer.GetSprite(frameIndex));
+                }
+            }
+            _copiedLayerNames.Add("");
+            _copiedLayerSprites.Add(_clip.Sprites[frameIndex]);
             _hasCopiedFrame = true;
         }
 
         /// <summary>
-        /// コピー済みフレームを選択位置の右へ貼り付ける
+        /// 主レイヤーでは右へコマを挿入し、拡張レイヤーでは選択コマへ画像を貼り付ける
         /// </summary>
         private void PasteCopiedFrameAfterSelected() {
-            if (!_hasCopiedFrame || _selectedFrameIndex < 0) {
+            if (!CanEditClipFrames() || !_hasCopiedFrame || _selectedFrameIndex < 0 || _selectedFrameIndex >= _spritesProperty.arraySize) {
+                return;
+            }
+
+            if (_selectedLayerIndex >= 0) {
+                SetFrameSprites(_selectedFrameIndex, new[] { _copiedFrameSprite });
                 return;
             }
 
             InsertFrameAfter(_selectedFrameIndex, _copiedFrameSprite);
+            if (_copiedLayerSprites == null) {
+                return;
+            }
+            BeginClipEdit("Paste Sprite Animation Layers", false);
+            var properties = GetLayerSpriteProperties();
+            for (var i = 0; i < properties.Count; i++) {
+                var name = i == 0 ? "" : _clip.ExtensionSpriteLayers[i - 1].LayerName;
+                var index = _copiedLayerNames.IndexOf(name);
+                if (index >= 0 && index < _copiedLayerSprites.Count) {
+                    properties[i].GetArrayElementAtIndex(_selectedFrameIndex).objectReferenceValue = _copiedLayerSprites[index];
+                }
+            }
+            ApplyClipEdit();
+            RefreshClipViews();
         }
 
         /// <summary>
         /// 指定フレームを削除する
         /// </summary>
         private void RemoveFrameAt(int frameIndex) {
-            if (!CanEditClipFrames() || frameIndex < 0 || frameIndex >= _spritesProperty.arraySize) {
+            if (!CanChangeFrameCount() || frameIndex < 0 || frameIndex >= _spritesProperty.arraySize) {
                 return;
             }
 
             BeginClipEdit("Remove Sprite Animation Frame", true);
-            _spritesProperty.DeleteArrayElementAtIndex(frameIndex);
-            if (frameIndex < _spritesProperty.arraySize &&
-                _spritesProperty.GetArrayElementAtIndex(frameIndex).objectReferenceValue == null) {
-                _spritesProperty.DeleteArrayElementAtIndex(frameIndex);
+            foreach (var sprites in GetLayerSpriteProperties()) {
+                var previousCount = sprites.arraySize;
+                sprites.DeleteArrayElementAtIndex(frameIndex);
+                if (sprites.arraySize == previousCount) {
+                    sprites.DeleteArrayElementAtIndex(frameIndex);
+                }
             }
 
             ApplyClipEdit();
@@ -494,17 +513,22 @@ namespace UnitySpriteAnimation.Editor {
                 menu.AddDisabledItem(new GUIContent("Copy"));
             }
 
-            if (_hasCopiedFrame && _selectedFrameIndex >= 0) {
+            if (CanEditClipFrames() && _hasCopiedFrame && _selectedFrameIndex >= 0 && _selectedFrameIndex < _spritesProperty.arraySize) {
                 menu.AddItem(new GUIContent("Paste"), false, PasteCopiedFrameAfterSelected);
             }
             else {
                 menu.AddDisabledItem(new GUIContent("Paste"));
             }
 
-            menu.AddItem(new GUIContent("Duplicate"), false, () => DuplicateFrameAt(frameIndex));
+            if (CanChangeFrameCount() && frameIndex >= 0 && frameIndex < _clip.FrameCount) {
+                menu.AddItem(new GUIContent("Duplicate"), false, () => DuplicateFrameAt(frameIndex));
+            }
+            else {
+                menu.AddDisabledItem(new GUIContent("Duplicate"));
+            }
             menu.AddItem(new GUIContent("Clear Sprite"), false, () => ClearFrameSpriteAt(frameIndex));
 
-            if (_clip != null && _clip.FrameCount > 0) {
+            if (CanChangeFrameCount() && frameIndex >= 0 && frameIndex < _clip.FrameCount) {
                 menu.AddItem(new GUIContent("Remove"), false, () => RemoveFrameAt(frameIndex));
             }
             else {
@@ -548,6 +572,7 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             DeleteSelectedFrameContent();
+            evt.PreventDefault();
             evt.StopPropagation();
         }
 

@@ -122,6 +122,26 @@ public sealed class ImageSpriteAnimationExample : MonoBehaviour
 }
 ```
 
+### Extension Sprite Layers
+
+既存の `Sprites` は主レイヤーとして保持されます。`Extension Sprite Layers` を追加すると、本体と影などの Sprite を別々の `Image` / `SpriteRenderer` に同期して反映できます。
+
+1. Clip Editor の `Add Layer` で拡張レイヤーを追加し、`Layer Name` を `Shadow` などに設定します。
+2. `Layer` で編集対象を選択し、主レイヤーと共通の各フレーム枠に Sprite を割り当てます。未割り当ての `None` はそのレイヤーを非表示にします。
+3. 本体とは別の GameObject に影用の `Image` または `SpriteRenderer` を配置します。
+4. 本体の Animator の `Extension Layer Bindings` に同じ `Layer Name` と影の表示先を登録します。影用の Animator は不要です。
+5. 位置・色・大きさ・描画順は表示先で設定します。SpriteRenderer は Sorting Layer / Order in Layer、Image は UI の階層順を使用します。
+
+再生時間・Frame Rate・Loop・フレーム数は主レイヤーが基準です。主レイヤーにフレーム枠がなければ再生しません。拡張レイヤーへのドラッグ & ドロップは既存の枠内だけに反映します。枠数の変更は `Total Frames` または共通のフレーム編集操作で行います。
+
+Clip Editor の挿入・削除・並べ替え・複製・コピーと貼り付けは全レイヤーのフレーム対応を維持します。`Clear Sprite` は選択レイヤーの参照だけをクリアし、`Remove Frame` は全レイヤーから枠を削除します。`Clear All Frames` は全レイヤーの枠を削除します。
+
+`Layer Name` は大文字小文字を区別します。空欄や重複は検証時に補正されます。改名した場合は Animator 側の binding 名も更新してください。Clip に対応するレイヤーがない binding の表示先は非表示になります。同じ表示先を複数のレイヤーや Animator で共有しないでください。
+
+拡張レイヤーの `Preview Placement` で `Back` / `Front` を指定できます。既存レイヤーと新規レイヤーは既定で `Back` です。Preview は **Back → 主レイヤー → Front** の順に描画し、各グループ内は配列の後ろほど手前になります。EditorWindow は Front / Main / Back に分けて表示し、各グループのボタンは左ほど手前です。`Bring Forward` / `Send Backward` で同じグループ内の順番を変更できます。配置先や順番の変更では Layer Name と Sprite データを保持します。これらは Preview 用の設定で、実際の Image / SpriteRenderer の描画順には適用しません。共通 Pivot と Pixels Per Unit を基準に重ね合わせます。Scene 側の Transform・色・描画順は Preview に反映しません。
+
+FlipBookBlend は表示先ごとの対応 Material を使用します。`None` を含む遷移や非対応の Sprite / Material は通常の切り替えで表示します。
+
 ### Main API
 
 `SpriteAnimator` では主に次の API を利用できます。
@@ -202,7 +222,7 @@ Clip Editor は大きく 3 つの領域で構成されています。
 キー入力:
 
 - `LeftArrow` / `RightArrow`: 選択フレームを移動
-- `Delete` / `Backspace`: 選択フレームの `Sprite` をクリア
+- `Delete` / `Backspace`: 選択レイヤーの選択フレームの `Sprite` をクリア
 - `Space`: `Preview` の再生 / 停止をトグル
 - `Copy` / `Paste` / `Duplicate`: 標準ショートカットに対応
 

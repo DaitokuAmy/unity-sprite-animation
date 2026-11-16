@@ -269,17 +269,23 @@ namespace UnitySpriteAnimation.Editor {
                 return;
             }
 
-            var currentSprite = _clip.GetSprite(_previewTime);
-            if (currentSprite == null) {
-                return;
+            var frameIndex = _clip.GetFrameIndex(_previewTime);
+            var canBlend = TryGetPreviewFlipBookBlend(out var mainPrevious, out var layerProgress) && EnsurePreviewMaterial();
+            var previousIndex = frameIndex > 0 ? frameIndex - 1 : _clip.FrameCount - 1;
+            foreach (var layerIndex in GetLayerDrawOrder()) {
+                var layer = layerIndex < 0 ? null : _clip.ExtensionSpriteLayers[layerIndex];
+                var current = layerIndex < 0 ? _clip.GetSprite(_previewTime) : layer?.GetSprite(frameIndex);
+                if (current == null) {
+                    continue;
+                }
+                var previous = canBlend ? (layerIndex < 0 ? mainPrevious : layer?.GetSprite(previousIndex)) : null;
+                if (previous != null && (!previous.packed || previous.packingMode != SpritePackingMode.Tight) && (!current.packed || current.packingMode != SpritePackingMode.Tight)) {
+                    DrawPreviewSpriteWithMaterial(rect, current, previous, layerProgress);
+                }
+                else {
+                    DrawSpritePreview(rect, current, _previewScale);
+                }
             }
-
-            if (TryGetPreviewFlipBookBlend(out var previousSprite, out var fadeProgress) && EnsurePreviewMaterial()) {
-                DrawPreviewSpriteWithMaterial(rect, currentSprite, previousSprite, fadeProgress);
-                return;
-            }
-
-            DrawSpritePreview(rect, currentSprite, _previewScale);
         }
 
         /// <summary>
@@ -378,8 +384,7 @@ namespace UnitySpriteAnimation.Editor {
                 return;
             }
 
-            var spriteRect = sprite.rect;
-            var drawRect = GetFitRect(rect, spriteRect.size, scaleMultiplier);
+            var drawRect = GetLayerPreviewRect(rect, sprite, scaleMultiplier);
             if (EnsurePreviewMaterial()) {
                 _previewMaterial.SetColor(ColorPropertyId, new Color(1.0f, 1.0f, 1.0f, Mathf.Clamp01(alpha)));
                 _previewMaterial.SetTexture(MainTexPropertyId, texture);
@@ -418,7 +423,7 @@ namespace UnitySpriteAnimation.Editor {
 
             var uvRect = GetSpritePreviewUVRect(currentSprite);
             var sourceRect = new Rect(uvRect.x, uvRect.y, uvRect.z, uvRect.w);
-            var drawRect = GetFitRect(rect, currentSprite.rect.size, _previewScale);
+            var drawRect = GetLayerPreviewRect(rect, currentSprite, _previewScale);
             if (TryDrawSpriteMeshPreview(drawRect, currentSprite, _previewMaterial)) {
                 return;
             }
@@ -677,6 +682,34 @@ namespace UnitySpriteAnimation.Editor {
             material.DisableKeyword("_ALPHAMODULATE_ON");
             material.DisableKeyword("UNITY_UI_CLIP_RECT");
             material.renderQueue = (int)RenderQueue.Transparent;
+        }
+
+        /// <summary>主レイヤー基準の倍率と共通 Pivot で描画矩形を取得する</summary>
+        /// <param name="rect">描画領域</param>
+        /// <param name="sprite">描画対象</param>
+        /// <param name="scaleMultiplier">表示倍率</param>
+        private Rect GetLayerPreviewRect(Rect rect, Sprite sprite, float scaleMultiplier) {
+            if (_clip == null || _clip.ExtensionSpriteLayers.Count == 0) {
+                return GetFitRect(rect, sprite.rect.size, scaleMultiplier);
+            }
+            var reference = _clip.GetSprite(_previewTime);
+            if (reference == null) {
+                foreach (var candidate in _clip.Sprites) {
+                    if (candidate != null) {
+                        reference = candidate;
+                        break;
+                    }
+                }
+            }
+            if (reference == null) {
+                reference = sprite;
+            }
+            var referenceRect = GetFitRect(rect, reference.rect.size, scaleMultiplier);
+            var pixelScale = referenceRect.width / reference.rect.width;
+            var origin = new Vector2(referenceRect.x + (reference.pivot.x * pixelScale), referenceRect.yMax - (reference.pivot.y * pixelScale));
+            var targetScale = pixelScale * reference.pixelsPerUnit / sprite.pixelsPerUnit;
+            var size = sprite.rect.size * targetScale;
+            return new Rect(origin.x - (sprite.pivot.x * targetScale), origin.y - ((sprite.rect.height - sprite.pivot.y) * targetScale), size.x, size.y);
         }
 
         /// <summary>

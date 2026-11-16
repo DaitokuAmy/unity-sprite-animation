@@ -24,12 +24,16 @@ namespace UnitySpriteAnimation.Editor {
             toolbar.Add(_clipField);
 
             _clearFramesButton = new Button(ClearFrames) {
-                text = "Clear Frames",
+                text = "Clear All Frames",
+                tooltip = "Remove all frame slots from the main and extension layers.",
             };
-            _clearFramesButton.SetEnabled(_clip != null && _clip.FrameCount > 0);
+            _clearFramesButton.SetEnabled(CanChangeFrameCount() && _clip.FrameCount > 0);
             toolbar.Add(_clearFramesButton);
 
             root.Add(toolbar);
+            _layerToolbar = new VisualElement();
+            _layerToolbar.style.flexDirection = FlexDirection.Row;
+            root.Add(_layerToolbar);
         }
 
         /// <summary>
@@ -37,7 +41,7 @@ namespace UnitySpriteAnimation.Editor {
         /// </summary>
         private void RefreshToolbar() {
             if (_clearFramesButton != null) {
-                _clearFramesButton.SetEnabled(_clip != null && _clip.FrameCount > 0);
+                _clearFramesButton.SetEnabled(CanChangeFrameCount() && _clip.FrameCount > 0);
             }
         }
 
@@ -190,7 +194,8 @@ namespace UnitySpriteAnimation.Editor {
             _inspectorContainer.Add(_inspectorTitleLabel);
 
             _inspectorRemoveButton = new Button(() => RemoveFrameAt(_selectedFrameIndex)) {
-                text = "Remove",
+                text = "Remove Frame",
+                tooltip = "Remove this frame slot from every layer.",
             };
             _inspectorRemoveButton.style.marginBottom = 8.0f;
             _inspectorRemoveButton.style.alignSelf = Align.FlexStart;
@@ -432,7 +437,7 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             _inspectorTitleLabel.text = _selectedFrameIndex >= 0 ? $"Current Frame [{_selectedFrameIndex}]" : "Current Frame";
-            _inspectorRemoveButton.SetEnabled(_clip != null && _selectedFrameIndex >= 0 && _clip.FrameCount > 0);
+            _inspectorRemoveButton.SetEnabled(CanChangeFrameCount() && _selectedFrameIndex >= 0 && _clip.FrameCount > 0);
 
             if (_clip == null || _serializedClip == null) {
                 _inspectorHelpBox.style.display = DisplayStyle.Flex;
@@ -656,7 +661,7 @@ namespace UnitySpriteAnimation.Editor {
         private void RefreshTimelineHeader() {
             if (_timelineTotalFramesField != null) {
                 _timelineTotalFramesField.SetValueWithoutNotify(_clip != null ? Mathf.Max(0, _clip.FrameCount) : 0);
-                _timelineTotalFramesField.SetEnabled(_clip != null);
+                _timelineTotalFramesField.SetEnabled(CanChangeFrameCount());
             }
 
             if (_timelineFrameRateField != null) {
