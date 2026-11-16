@@ -251,8 +251,8 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             CopyFrameAt(frameIndex);
-            _selectedFrameIndex = frameIndex;
-            PasteCopiedFrameAfterSelected();
+            InsertFrameAfter(frameIndex);
+            PasteCopiedFrameToSelected();
         }
 
         /// <summary>
@@ -286,9 +286,9 @@ namespace UnitySpriteAnimation.Editor {
         }
 
         /// <summary>
-        /// 主レイヤーでは右へコマを挿入し、拡張レイヤーでは選択コマへ画像を貼り付ける
+        /// コピーした内容で選択中のコマを上書きする
         /// </summary>
-        private void PasteCopiedFrameAfterSelected() {
+        private void PasteCopiedFrameToSelected() {
             if (!CanEditClipFrames() || !_hasCopiedFrame || _selectedFrameIndex < 0 || _selectedFrameIndex >= _spritesProperty.arraySize) {
                 return;
             }
@@ -298,7 +298,6 @@ namespace UnitySpriteAnimation.Editor {
                 return;
             }
 
-            InsertFrameAfter(_selectedFrameIndex, _copiedFrameSprite);
             if (_copiedLayerSprites == null) {
                 return;
             }
@@ -514,7 +513,7 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             if (CanEditClipFrames() && _hasCopiedFrame && _selectedFrameIndex >= 0 && _selectedFrameIndex < _spritesProperty.arraySize) {
-                menu.AddItem(new GUIContent("Paste"), false, PasteCopiedFrameAfterSelected);
+                menu.AddItem(new GUIContent("Paste"), false, PasteCopiedFrameToSelected);
             }
             else {
                 menu.AddDisabledItem(new GUIContent("Paste"));
@@ -643,7 +642,7 @@ namespace UnitySpriteAnimation.Editor {
             }
 
             if (evt.commandName == "Paste") {
-                PasteCopiedFrameAfterSelected();
+                PasteCopiedFrameToSelected();
                 evt.StopPropagation();
                 return;
             }

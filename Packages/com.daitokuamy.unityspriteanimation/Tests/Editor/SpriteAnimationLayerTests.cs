@@ -228,6 +228,23 @@ namespace UnitySpriteAnimation.Tests {
             Assert.That(_clip.FrameCount, Is.EqualTo(3));
         }
 
+        /// <summary>Main への貼り付けはコマ数を変えずにコピーした内容で上書きする</summary>
+        [Test]
+        public void MainPasteOverwritesSelectedFrameWithoutInserting() {
+            var window = Track(ScriptableObject.CreateInstance<SpriteAnimationClipEditorWindow>());
+            Invoke(window, "SetClip", _clip);
+            Set(window, "_selectedFrameIndex", 0);
+            Invoke(window, "CopySelectedFrame");
+            Set(window, "_selectedFrameIndex", 1);
+            Invoke(window, "PasteCopiedFrameToSelected");
+            CollectionAssert.AreEqual(new[] { _first, _first, _first }, _clip.Sprites);
+            CollectionAssert.AreEqual(new[] { _shadow, _shadow, _second }, _clip.ExtensionSpriteLayers[0].Sprites);
+            Assert.That(_clip.FrameCount, Is.EqualTo(3));
+            Invoke(window, "DuplicateFrameAt", 1);
+            CollectionAssert.AreEqual(new[] { _first, _first, _first, _first }, _clip.Sprites);
+            CollectionAssert.AreEqual(new[] { _shadow, _shadow, _shadow, _second }, _clip.ExtensionSpriteLayers[0].Sprites);
+        }
+
         /// <summary>拡張レイヤーへの貼り付けは選択コマだけを書き換える</summary>
         [Test]
         public void ExtensionPasteReplacesOnlySelectedSprite() {
@@ -237,7 +254,7 @@ namespace UnitySpriteAnimation.Tests {
             Set(window, "_selectedFrameIndex", 0);
             Invoke(window, "CopySelectedFrame");
             Set(window, "_selectedFrameIndex", 1);
-            Invoke(window, "PasteCopiedFrameAfterSelected");
+            Invoke(window, "PasteCopiedFrameToSelected");
             CollectionAssert.AreEqual(new[] { _first, _second, _first }, _clip.Sprites);
             CollectionAssert.AreEqual(new[] { _shadow, _shadow, _second }, _clip.ExtensionSpriteLayers[0].Sprites);
             Assert.That(_clip.FrameCount, Is.EqualTo(3));
